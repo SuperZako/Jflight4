@@ -332,22 +332,22 @@ class Jflight extends Applet3D {
                 if (cp.z < 400) {
 
                     // 0.005•bŒã`0.04•bŒã‚Ì’eŠÛˆÊ’u‚ðƒ‰ƒCƒ“•\Ž¦
-                    dm.x = bp.position.x + bp.vVel.x * 0.005;
-                    dm.y = bp.position.y + bp.vVel.y * 0.005;
-                    dm.z = bp.position.z + bp.vVel.z * 0.005;
+                    dm.x = bp.position.x + bp.velocity.x * 0.005;
+                    dm.y = bp.position.y + bp.velocity.y * 0.005;
+                    dm.z = bp.position.z + bp.velocity.z * 0.005;
                     this.change3d(this.plane[0], dm, cp);
-                    dm.x = bp.position.x + bp.vVel.x * 0.04;
-                    dm.y = bp.position.y + bp.vVel.y * 0.04;
-                    dm.z = bp.position.z + bp.vVel.z * 0.04;
+                    dm.x = bp.position.x + bp.velocity.x * 0.04;
+                    dm.y = bp.position.y + bp.velocity.y * 0.04;
+                    dm.z = bp.position.z + bp.velocity.z * 0.04;
                     this.change3d(this.plane[0], dm, dm2);
                     this.drawBline(context, cp, dm2);
                 }
 
                 // Œ»ÝˆÊ’u`0.05•bŒã‚Ì’eŠÛˆÊ’u‚ðƒ‰ƒCƒ“•\Ž¦
                 this.change3d(this.plane[0], bp.position, cp);
-                dm.x = bp.position.x + bp.vVel.x * 0.05;
-                dm.y = bp.position.y + bp.vVel.y * 0.05;
-                dm.z = bp.position.z + bp.vVel.z * 0.05;
+                dm.x = bp.position.x + bp.velocity.x * 0.05;
+                dm.y = bp.position.y + bp.velocity.y * 0.05;
+                dm.z = bp.position.z + bp.velocity.z * 0.05;
                 this.change3d(this.plane[0], dm, dm2);
                 this.drawBlined(context, cp, dm2);
             }

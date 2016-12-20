@@ -11,7 +11,7 @@ class Bullet extends PhysicsState {
 
     // public pVel = new CVector3();         // 位置
     public opVel = new CVector3();        // １ステップ前の位置
-    public vVel = new CVector3();         // 速度
+    // public vVel = new CVector3();         // 速度
     public use = 0;               // 使用状態（0で未使用）
     public bom = 0;               // 爆発状態（0で未爆）
 
@@ -39,13 +39,13 @@ class Bullet extends PhysicsState {
     public move(world: Jflight, plane: Plane) {
 
         // 重力加速
-        this.vVel.z += Jflight.G * Jflight.DT;
+        this.velocity.z += Jflight.G * Jflight.DT;
 
         // 一つ前の位置を保存
         this.opVel.set(this.position.x, this.position.y, this.position.z);
 
         // 移動
-        this.position.addCons(this.vVel, Jflight.DT);
+        this.position.addCons(this.velocity, Jflight.DT);
         this.use--;
 
         // 弾丸を移動させる
@@ -84,7 +84,7 @@ class Bullet extends PhysicsState {
             this.m_b.setMinus(this.opVel, world.plane[plane.gunTarget].position);
 
             // 一つ前の弾丸の位置と現在の弾丸の位置との差ベクトルを求める
-            this.m_vv.setCons(this.vVel, Jflight.DT);
+            this.m_vv.setCons(this.velocity, Jflight.DT);
 
             let v0 = this.m_vv.abs();
             let l = this.m_a.abs() + this.m_b.abs();
@@ -100,8 +100,8 @@ class Bullet extends PhysicsState {
                 this.m_vv.z = (this.m_a.z + this.m_b.z) / 2.0;
                 l = this.m_vv.abs();
                 this.m_vv.consInv(l);
-                this.vVel.addCons(this.m_vv, v0 / 0.1);
-                this.vVel.cons(0.1);
+                this.velocity.addCons(this.m_vv, v0 / 0.1);
+                this.velocity.cons(0.1);
             }
         }
 
@@ -110,13 +110,13 @@ class Bullet extends PhysicsState {
         let gh = world.gHeight(this.position.x, this.position.y);
         if (this.position.z < gh) {
             // 地面以下なら、乱反射させる
-            this.vVel.z = Math.abs(this.vVel.z);
+            this.velocity.z = Math.abs(this.velocity.z);
             this.position.z = gh;
-            this.vVel.x += (Math.random() - 0.5) * 50;
-            this.vVel.y += (Math.random() - 0.5) * 50;
-            this.vVel.x *= 0.5;
-            this.vVel.y *= 0.5;
-            this.vVel.z *= 0.1;
+            this.velocity.x += (Math.random() - 0.5) * 50;
+            this.velocity.y += (Math.random() - 0.5) * 50;
+            this.velocity.x *= 0.5;
+            this.velocity.y *= 0.5;
+            this.velocity.z *= 0.1;
         }
     }
 }

@@ -828,10 +828,10 @@ class Plane extends PhysicsState {
         if (this.gunShoot && this.gunTemp++ < Plane.MAXT) {
             for (let i = 0; i < Plane.BMAX; i++) {
                 if (this.bullet[i].use === 0) {
-                    this.bullet[i].vVel.setPlus(this.velocity, oi);
+                    this.bullet[i].velocity.setPlus(this.velocity, oi);
                     aa = Math.random();
                     this.bullet[i].position.setPlus(this.position, ni);
-                    this.bullet[i].position.addCons(this.bullet[i].vVel, 0.1 * aa);
+                    this.bullet[i].position.addCons(this.bullet[i].velocity, 0.1 * aa);
                     this.bullet[i].opVel.set(this.bullet[i].position.x, this.bullet[i].position.y, this.bullet[i].position.z);
                     this.bullet[i].bom = 0;
                     this.bullet[i].use = 15;

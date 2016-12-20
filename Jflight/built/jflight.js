@@ -626,7 +626,7 @@ var Bullet = (function (_super) {
         // �ϐ�
         // public pVel = new CVector3();         // �ʒu
         _this.opVel = new CVector3(); // �P�X�e�b�v�O�̈ʒu
-        _this.vVel = new CVector3(); // ���x
+        // public vVel = new CVector3();         // ���x
         _this.use = 0; // �g�p��ԁi0�Ŗ��g�p�j
         _this.bom = 0; // ������ԁi0�Ŗ����j
         // �e���|�����p�I�u�W�F�N�g
@@ -644,11 +644,11 @@ var Bullet = (function (_super) {
     // �e�۔��ˏ�����Jflight�N���X���ōs���Ă���
     Bullet.prototype.move = function (world, plane) {
         // �d�͉���
-        this.vVel.z += Jflight.G * Jflight.DT;
+        this.velocity.z += Jflight.G * Jflight.DT;
         // ��O�̈ʒu��ۑ�
         this.opVel.set(this.position.x, this.position.y, this.position.z);
         // �ړ�
-        this.position.addCons(this.vVel, Jflight.DT);
+        this.position.addCons(this.velocity, Jflight.DT);
         this.use--;
         // �e�ۂ�ړ�������
         if (this.use > 0) {
@@ -680,7 +680,7 @@ var Bullet = (function (_super) {
             // ��O�̒e�ۂ̈ʒu�ƖڕW�Ƃ̍��x�N�g������߂�
             this.m_b.setMinus(this.opVel, world.plane[plane.gunTarget].position);
             // ��O�̒e�ۂ̈ʒu�ƌ��݂̒e�ۂ̈ʒu�Ƃ̍��x�N�g������߂�
-            this.m_vv.setCons(this.vVel, Jflight.DT);
+            this.m_vv.setCons(this.velocity, Jflight.DT);
             var v0 = this.m_vv.abs();
             var l = this.m_a.abs() + this.m_b.abs();
             if (l < v0 * 1.05) {
@@ -693,21 +693,21 @@ var Bullet = (function (_super) {
                 this.m_vv.z = (this.m_a.z + this.m_b.z) / 2.0;
                 l = this.m_vv.abs();
                 this.m_vv.consInv(l);
-                this.vVel.addCons(this.m_vv, v0 / 0.1);
-                this.vVel.cons(0.1);
+                this.velocity.addCons(this.m_vv, v0 / 0.1);
+                this.velocity.cons(0.1);
             }
         }
         // �n�ʂƂ̓����蔻��
         var gh = world.gHeight(this.position.x, this.position.y);
         if (this.position.z < gh) {
             // �n�ʈȉ��Ȃ�A�����˂�����
-            this.vVel.z = Math.abs(this.vVel.z);
+            this.velocity.z = Math.abs(this.velocity.z);
             this.position.z = gh;
-            this.vVel.x += (Math.random() - 0.5) * 50;
-            this.vVel.y += (Math.random() - 0.5) * 50;
-            this.vVel.x *= 0.5;
-            this.vVel.y *= 0.5;
-            this.vVel.z *= 0.1;
+            this.velocity.x += (Math.random() - 0.5) * 50;
+            this.velocity.y += (Math.random() - 0.5) * 50;
+            this.velocity.x *= 0.5;
+            this.velocity.y *= 0.5;
+            this.velocity.z *= 0.1;
         }
     };
     return Bullet;
@@ -1520,10 +1520,10 @@ var Plane = (function (_super) {
         if (this.gunShoot && this.gunTemp++ < Plane.MAXT) {
             for (var i = 0; i < Plane.BMAX; i++) {
                 if (this.bullet[i].use === 0) {
-                    this.bullet[i].vVel.setPlus(this.velocity, oi);
+                    this.bullet[i].velocity.setPlus(this.velocity, oi);
                     aa = Math.random();
                     this.bullet[i].position.setPlus(this.position, ni);
-                    this.bullet[i].position.addCons(this.bullet[i].vVel, 0.1 * aa);
+                    this.bullet[i].position.addCons(this.bullet[i].velocity, 0.1 * aa);
                     this.bullet[i].opVel.set(this.bullet[i].position.x, this.bullet[i].position.y, this.bullet[i].position.z);
                     this.bullet[i].bom = 0;
                     this.bullet[i].use = 15;
@@ -1895,21 +1895,21 @@ var Jflight = (function (_super) {
                 // �X�N���[���ɋ߂��ꍇ�A��������\��
                 if (cp.z < 400) {
                     // 0.005�b��`0.04�b��̒e�ۈʒu����C���\��
-                    dm.x = bp.position.x + bp.vVel.x * 0.005;
-                    dm.y = bp.position.y + bp.vVel.y * 0.005;
-                    dm.z = bp.position.z + bp.vVel.z * 0.005;
+                    dm.x = bp.position.x + bp.velocity.x * 0.005;
+                    dm.y = bp.position.y + bp.velocity.y * 0.005;
+                    dm.z = bp.position.z + bp.velocity.z * 0.005;
                     this.change3d(this.plane[0], dm, cp);
-                    dm.x = bp.position.x + bp.vVel.x * 0.04;
-                    dm.y = bp.position.y + bp.vVel.y * 0.04;
-                    dm.z = bp.position.z + bp.vVel.z * 0.04;
+                    dm.x = bp.position.x + bp.velocity.x * 0.04;
+                    dm.y = bp.position.y + bp.velocity.y * 0.04;
+                    dm.z = bp.position.z + bp.velocity.z * 0.04;
                     this.change3d(this.plane[0], dm, dm2);
                     this.drawBline(context, cp, dm2);
                 }
                 // ���݈ʒu�`0.05�b��̒e�ۈʒu����C���\��
                 this.change3d(this.plane[0], bp.position, cp);
-                dm.x = bp.position.x + bp.vVel.x * 0.05;
-                dm.y = bp.position.y + bp.vVel.y * 0.05;
-                dm.z = bp.position.z + bp.vVel.z * 0.05;
+                dm.x = bp.position.x + bp.velocity.x * 0.05;
+                dm.y = bp.position.y + bp.velocity.y * 0.05;
+                dm.z = bp.position.z + bp.velocity.z * 0.05;
                 this.change3d(this.plane[0], dm, dm2);
                 this.drawBlined(context, cp, dm2);
             }
