@@ -374,9 +374,9 @@ class Jflight extends Applet3D {
 
                 // ミサイルが爆発中でなければ、ミサイル本体を表示
                 if (ap.bom <= 0) {
-                    dm.x = ap.position.x + ap.aVel.x * 4;
-                    dm.y = ap.position.y + ap.aVel.y * 4;
-                    dm.z = ap.position.z + ap.aVel.z * 4;
+                    dm.x = ap.position.x + ap.forward.x * 4;
+                    dm.y = ap.position.y + ap.forward.y * 4;
+                    dm.z = ap.position.z + ap.forward.z * 4;
                     this.change3d(this.plane[0], dm, cp);
                     this.change3d(this.plane[0], ap.position, dm);
                     this.drawAline(cp, dm);

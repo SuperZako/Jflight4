@@ -2,7 +2,9 @@
 
 class PhysicsState {
     public position = new CVector3();    // 位置（ワールド座標系）
-    public rotation = new THREE.Euler();
+    public velocity = new CVector3();    // 速度（ワールド座標系）
+
+    public rotation = new THREE.Euler(); //
 
     public constructor() {
     }

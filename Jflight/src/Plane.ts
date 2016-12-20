@@ -41,8 +41,8 @@ class Plane extends PhysicsState {
     public wings: Wing[] = [];       // 各翼(0,1-主翼,2-水平尾翼,3-垂直尾翼,4,5-エンジン)
 
     // public position = new CVector3();    // 機体位置（ワールド座標系）
+    // public vpVel = new CVector3();   // 機体速度（ワールド座標系）
 
-    public vpVel = new CVector3();   // 機体速度（ワールド座標系）
     public vVel = new CVector3();    // 機体速度（機体座標系）
     public gVel = new CVector3();    // 機体加速度（ワールド座標系）
     // public aVel = new THREE.Euler();    // 機体向き（オイラー角）
@@ -140,10 +140,10 @@ class Plane extends PhysicsState {
         this.position.z = 5000;
         this.gHeight = 0;
         this.height = 5000;
-        this.vpVel.x = 200.0;
+        this.velocity.x = 200.0;
         this.rotation.set(0, 0, Math.PI / 2);
-        this.vpVel.y = 0.0;
-        this.vpVel.z = 0.0;
+        this.velocity.y = 0.0;
+        this.velocity.z = 0.0;
         this.gVel.set(0, 0, 0);
         this.vaVel.set(0, 0, 0);
         this.vVel.set(0, 0, 0);
@@ -497,7 +497,7 @@ class Plane extends PhysicsState {
         this.wings[5].aAngle = 0;
         this.wings[5].bAngle = 0;
 
-        this.change_w2l(this.vpVel, this.vVel);
+        this.change_w2l(this.velocity, this.vVel);
         this.onGround = false;
 
         if (this.height < 5) {
@@ -577,9 +577,9 @@ class Plane extends PhysicsState {
 
         // 機体で発生する抵抗を擬似的に生成
 
-        this.vpVel.x -= this.vpVel.x * this.vpVel.x * 0.00002;
-        this.vpVel.y -= this.vpVel.y * this.vpVel.y * 0.00002;
-        this.vpVel.z -= this.vpVel.z * this.vpVel.z * 0.00002;
+        this.velocity.x -= this.velocity.x * this.velocity.x * 0.00002;
+        this.velocity.y -= this.velocity.y * this.velocity.y * 0.00002;
+        this.velocity.z -= this.velocity.z * this.velocity.z * 0.00002;
 
         // 地面の傾き処理
 
@@ -587,9 +587,9 @@ class Plane extends PhysicsState {
         if (this.onGround) {
             this.gVel.x -= dm.x * 10;
             this.gVel.y -= dm.y * 10;
-            let vz = dm.x * this.vpVel.x + dm.y * this.vpVel.y;
-            if (this.vpVel.z < vz) {
-                this.vpVel.z = vz;
+            let vz = dm.x * this.velocity.x + dm.y * this.velocity.y;
+            if (this.velocity.z < vz) {
+                this.velocity.z = vz;
             }
         }
 
@@ -603,18 +603,18 @@ class Plane extends PhysicsState {
 
         // 機体の位置を積分して求める
 
-        this.vpVel.addCons(this.gVel, Jflight.DT);
-        this.position.addCons(this.vpVel, Jflight.DT);
+        this.velocity.addCons(this.gVel, Jflight.DT);
+        this.position.addCons(this.velocity, Jflight.DT);
 
         // 念のため、地面にめり込んだかどうかチェック
         if (this.height < 2) {
             this.position.z = this.gHeight + 2;
             this.height = 2;
-            this.vpVel.z *= -0.1;
+            this.velocity.z *= -0.1;
         }
 
         // 地面にある程度以上の速度か、無理な体勢で接触した場合、機体を初期化
-        if (this.height < 5 && (Math.abs(this.vpVel.z) > 50 || Math.abs(this.rotation.y) > 20 * Math.PI / 180 || this.rotation.x > 10 * Math.PI / 180)) {
+        if (this.height < 5 && (Math.abs(this.velocity.z) > 50 || Math.abs(this.rotation.y) > 20 * Math.PI / 180 || this.rotation.x > 10 * Math.PI / 180)) {
             this.posInit();
         }
     }
@@ -697,7 +697,7 @@ class Plane extends PhysicsState {
         }
 
         // 機体高度が低いか、8秒以内に地面にぶつかりそうな場合、空に向ける
-        if (this.height < 1000 || this.height + this.vpVel.z * 8 < 0) {
+        if (this.height < 1000 || this.height + this.velocity.z * 8 < 0) {
             this.stickPos.y = -this.rotation.y;
             if (Math.abs(this.rotation.y) < Math.PI / 2) {
                 this.stickPos.x = -1;
@@ -756,7 +756,7 @@ class Plane extends PhysicsState {
         // 弾丸の初期速度を求めておく
         dm.set(this.gunX * 400 / 200, 400, this.gunY * 400 / 200);
         this.change_l2w(dm, oi);
-        oi.add(this.vpVel);
+        oi.add(this.velocity);
         this.gunTime = 1.0;
 
         // 弾丸の初期位置を求めておく
@@ -779,7 +779,7 @@ class Plane extends PhysicsState {
         // 機銃を目標へ向ける
         if (this.gunTarget >= 0) {
             c.set(world.plane[this.gunTarget].position.x, world.plane[this.gunTarget].position.y, world.plane[this.gunTarget].position.z);
-            c.addCons(world.plane[this.gunTarget].vpVel, this.gunTime);
+            c.addCons(world.plane[this.gunTarget].velocity, this.gunTime);
             world.change3d(this, c, a);
             world.change3d(this, world.plane[this.gunTarget].position, b);
             sc.x += b.x - a.x;
@@ -828,7 +828,7 @@ class Plane extends PhysicsState {
         if (this.gunShoot && this.gunTemp++ < Plane.MAXT) {
             for (let i = 0; i < Plane.BMAX; i++) {
                 if (this.bullet[i].use === 0) {
-                    this.bullet[i].vVel.setPlus(this.vpVel, oi);
+                    this.bullet[i].vVel.setPlus(this.velocity, oi);
                     aa = Math.random();
                     this.bullet[i].position.setPlus(this.position, ni);
                     this.bullet[i].position.addCons(this.bullet[i].vVel, 0.1 * aa);
@@ -907,7 +907,7 @@ class Plane extends PhysicsState {
                 this.change_l2w(dm, oi);
 
                 ap.position.setPlus(this.position, ni);
-                ap.vpVel.setPlus(this.vpVel, oi);
+                ap.vpVel.setPlus(this.velocity, oi);
 
                 // 発射向きを決める
 
@@ -921,7 +921,7 @@ class Plane extends PhysicsState {
                 dm.z += (k / 4) * 5;
                 this.change_l2w(dm, oi);
                 let v = oi.abs();
-                ap.aVel.setConsInv(oi, v);
+                ap.forward.setConsInv(oi, v);
 
                 // 各種初期化
 

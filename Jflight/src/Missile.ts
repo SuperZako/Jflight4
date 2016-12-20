@@ -15,7 +15,7 @@ class Missile extends PhysicsState {
     
     public opVel: CVector3[] = [];      // 昔の位置（煙の位置）
     public vpVel = new CVector3();      // 速度
-    public aVel = new CVector3();       // 向き（単位ベクトル）
+    public forward = new CVector3();       // 向き（単位ベクトル）
     public use = 0;                     // 使用状態（0で未使用）
     public bom = 0;                     // 爆発状態（0で未爆）
     public bomm = 0;                    // 破裂状態（0で未爆）
@@ -87,7 +87,7 @@ class Missile extends PhysicsState {
             }
 
             // 追尾目標との速度差を求める
-            this.m_a0.setMinus(tp.vpVel, this.vpVel);
+            this.m_a0.setMinus(tp.velocity, this.vpVel);
             let m = this.m_a0.abs();
 
             // 衝突予想時間を修正ありで求める
@@ -102,9 +102,9 @@ class Missile extends PhysicsState {
             }
 
             // 衝突予想時間時のターゲットの位置と自分の位置の差を求める
-            this.m_a0.x = tp.position.x + tp.vpVel.x * t0 - (this.position.x + this.vpVel.x * t0);
-            this.m_a0.y = tp.position.y + tp.vpVel.y * t0 - (this.position.y + this.vpVel.y * t0);
-            this.m_a0.z = tp.position.z + tp.vpVel.z * t0 - (this.position.z + this.vpVel.z * t0);
+            this.m_a0.x = tp.position.x + tp.velocity.x * t0 - (this.position.x + this.vpVel.x * t0);
+            this.m_a0.y = tp.position.y + tp.velocity.y * t0 - (this.position.y + this.vpVel.y * t0);
+            this.m_a0.z = tp.position.z + tp.velocity.z * t0 - (this.position.z + this.vpVel.z * t0);
 
             let tr = ((100 - 15) - this.use) * 0.02 + 0.5;
             if (tr > 0.1) {
@@ -114,14 +114,14 @@ class Missile extends PhysicsState {
             if (tr < 1) {
                 // 発射直後は、派手な機動をしない
                 l = this.m_a0.abs();
-                this.aVel.addCons(this.m_a0, l * tr * 10);
+                this.forward.addCons(this.m_a0, l * tr * 10);
             } else {
                 // そうでない場合、追尾方向へミサイル機種を向ける
-                this.aVel.set(this.m_a0.x, this.m_a0.y, this.m_a0.z);
+                this.forward.set(this.m_a0.x, this.m_a0.y, this.m_a0.z);
             }
 
             // 向きを単位ベクトルに補正
-            this.aVel.consInv(this.aVel.abs());
+            this.forward.consInv(this.forward.abs());
         }
 
     }
@@ -137,12 +137,12 @@ class Missile extends PhysicsState {
 
             // 現在の速度成分と向き成分を合成して新たな速度成分とする
             let v = this.vpVel.abs();
-            this.vpVel.x = this.aVel.x * v * aa + this.vpVel.x * bb;
-            this.vpVel.y = this.aVel.y * v * aa + this.vpVel.y * bb;
-            this.vpVel.z = this.aVel.z * v * aa + this.vpVel.z * bb;
+            this.vpVel.x = this.forward.x * v * aa + this.vpVel.x * bb;
+            this.vpVel.y = this.forward.y * v * aa + this.vpVel.y * bb;
+            this.vpVel.z = this.forward.z * v * aa + this.vpVel.z * bb;
 
             // ミサイル加速
-            this.vpVel.addCons(this.aVel, 10.0);
+            this.vpVel.addCons(this.forward, 10.0);
         }
     }
 

@@ -480,7 +480,8 @@ var CVector3 = (function () {
 var PhysicsState = (function () {
     function PhysicsState() {
         this.position = new CVector3(); // 位置（ワールド座標系）
-        this.rotation = new THREE.Euler();
+        this.velocity = new CVector3(); // 速度（ワールド座標系）
+        this.rotation = new THREE.Euler(); //
     }
     return PhysicsState;
 }());
@@ -723,7 +724,7 @@ var Missile = (function (_super) {
         // public pVel = new CVector3();       // �ʒu
         _this.opVel = []; // �̂̈ʒu�i���̈ʒu�j
         _this.vpVel = new CVector3(); // ���x
-        _this.aVel = new CVector3(); // �����i�P�ʃx�N�g���j
+        _this.forward = new CVector3(); // �����i�P�ʃx�N�g���j
         _this.use = 0; // �g�p��ԁi0�Ŗ��g�p�j
         _this.bom = 0; // ������ԁi0�Ŗ����j
         _this.bomm = 0; // �j���ԁi0�Ŗ����j
@@ -772,7 +773,7 @@ var Missile = (function (_super) {
                 l = 0.001;
             }
             // �ǔ��ڕW�Ƃ̑��x������߂�
-            this.m_a0.setMinus(tp.vpVel, this.vpVel);
+            this.m_a0.setMinus(tp.velocity, this.vpVel);
             var m = this.m_a0.abs();
             // �Փ˗\�z���Ԃ�C������ŋ��߂�
             var t0 = l / v * (1.0 - m / (800 + 1));
@@ -784,9 +785,9 @@ var Missile = (function (_super) {
                 t0 = 5;
             }
             // �Փ˗\�z���Ԏ��̃^�[�Q�b�g�̈ʒu�Ǝ����̈ʒu�̍�����߂�
-            this.m_a0.x = tp.position.x + tp.vpVel.x * t0 - (this.position.x + this.vpVel.x * t0);
-            this.m_a0.y = tp.position.y + tp.vpVel.y * t0 - (this.position.y + this.vpVel.y * t0);
-            this.m_a0.z = tp.position.z + tp.vpVel.z * t0 - (this.position.z + this.vpVel.z * t0);
+            this.m_a0.x = tp.position.x + tp.velocity.x * t0 - (this.position.x + this.vpVel.x * t0);
+            this.m_a0.y = tp.position.y + tp.velocity.y * t0 - (this.position.y + this.vpVel.y * t0);
+            this.m_a0.z = tp.position.z + tp.velocity.z * t0 - (this.position.z + this.vpVel.z * t0);
             var tr = ((100 - 15) - this.use) * 0.02 + 0.5;
             if (tr > 0.1) {
                 tr = 0.1;
@@ -794,14 +795,14 @@ var Missile = (function (_super) {
             if (tr < 1) {
                 // ���˒���́A�h��ȋ@������Ȃ�
                 l = this.m_a0.abs();
-                this.aVel.addCons(this.m_a0, l * tr * 10);
+                this.forward.addCons(this.m_a0, l * tr * 10);
             }
             else {
                 // �����łȂ��ꍇ�A�ǔ������փ~�T�C���@��������
-                this.aVel.set(this.m_a0.x, this.m_a0.y, this.m_a0.z);
+                this.forward.set(this.m_a0.x, this.m_a0.y, this.m_a0.z);
             }
             // ������P�ʃx�N�g���ɕ␳
-            this.aVel.consInv(this.aVel.abs());
+            this.forward.consInv(this.forward.abs());
         }
     };
     // �~�T�C�����[�^�[�v�Z
@@ -812,11 +813,11 @@ var Missile = (function (_super) {
             var bb = 1 - aa;
             // ���݂̑��x�����ƌ���������������ĐV���ȑ��x�����Ƃ���
             var v = this.vpVel.abs();
-            this.vpVel.x = this.aVel.x * v * aa + this.vpVel.x * bb;
-            this.vpVel.y = this.aVel.y * v * aa + this.vpVel.y * bb;
-            this.vpVel.z = this.aVel.z * v * aa + this.vpVel.z * bb;
+            this.vpVel.x = this.forward.x * v * aa + this.vpVel.x * bb;
+            this.vpVel.y = this.forward.y * v * aa + this.vpVel.y * bb;
+            this.vpVel.z = this.forward.z * v * aa + this.vpVel.z * bb;
             // �~�T�C������
-            this.vpVel.addCons(this.aVel, 10.0);
+            this.vpVel.addCons(this.forward, 10.0);
         }
     };
     // �~�T�C���ړ��A�G�@�Ƃ̂����蔻��A�n�ʂƂ̓����蔻���s��
@@ -919,7 +920,7 @@ var Plane = (function (_super) {
         _this.matrix = new THREE.Matrix4();
         _this.wings = []; // �e��(0,1-�嗃,2-��������,3-��������,4,5-�G���W��)
         // public position = new CVector3();    // �@�̈ʒu�i���[���h���W�n�j
-        _this.vpVel = new CVector3(); // �@�̑��x�i���[���h���W�n�j
+        // public vpVel = new CVector3();   // �@�̑��x�i���[���h���W�n�j
         _this.vVel = new CVector3(); // �@�̑��x�i�@�̍��W�n�j
         _this.gVel = new CVector3(); // �@�̉����x�i���[���h���W�n�j
         // public aVel = new THREE.Euler();    // �@�̌����i�I�C���[�p�j
@@ -967,10 +968,10 @@ var Plane = (function (_super) {
         this.position.z = 5000;
         this.gHeight = 0;
         this.height = 5000;
-        this.vpVel.x = 200.0;
+        this.velocity.x = 200.0;
         this.rotation.set(0, 0, Math.PI / 2);
-        this.vpVel.y = 0.0;
-        this.vpVel.z = 0.0;
+        this.velocity.y = 0.0;
+        this.velocity.z = 0.0;
         this.gVel.set(0, 0, 0);
         this.vaVel.set(0, 0, 0);
         this.vVel.set(0, 0, 0);
@@ -1248,7 +1249,7 @@ var Plane = (function (_super) {
         this.wings[4].bAngle = 0;
         this.wings[5].aAngle = 0;
         this.wings[5].bAngle = 0;
-        this.change_w2l(this.vpVel, this.vVel);
+        this.change_w2l(this.velocity, this.vVel);
         this.onGround = false;
         if (this.height < 5) {
             this.onGround = true;
@@ -1313,17 +1314,17 @@ var Plane = (function (_super) {
         // �����x�����
         this.gVel.setConsInv(af, this.mass);
         // �@�̂Ŕ��������R��[���I�ɐ���
-        this.vpVel.x -= this.vpVel.x * this.vpVel.x * 0.00002;
-        this.vpVel.y -= this.vpVel.y * this.vpVel.y * 0.00002;
-        this.vpVel.z -= this.vpVel.z * this.vpVel.z * 0.00002;
+        this.velocity.x -= this.velocity.x * this.velocity.x * 0.00002;
+        this.velocity.y -= this.velocity.y * this.velocity.y * 0.00002;
+        this.velocity.z -= this.velocity.z * this.velocity.z * 0.00002;
         // �n�ʂ̌X������
         world.gGrad(this.position.x, this.position.y, dm);
         if (this.onGround) {
             this.gVel.x -= dm.x * 10;
             this.gVel.y -= dm.y * 10;
-            var vz = dm.x * this.vpVel.x + dm.y * this.vpVel.y;
-            if (this.vpVel.z < vz) {
-                this.vpVel.z = vz;
+            var vz = dm.x * this.velocity.x + dm.y * this.velocity.y;
+            if (this.velocity.z < vz) {
+                this.velocity.z = vz;
             }
         }
         // �u�[�X�g���ɂ́A�@�̂�U��������
@@ -1333,16 +1334,16 @@ var Plane = (function (_super) {
             this.gVel.z += (Math.random() - 0.5) * 5;
         }
         // �@�̂̈ʒu��ϕ����ċ��߂�
-        this.vpVel.addCons(this.gVel, Jflight.DT);
-        this.position.addCons(this.vpVel, Jflight.DT);
+        this.velocity.addCons(this.gVel, Jflight.DT);
+        this.position.addCons(this.velocity, Jflight.DT);
         // �O�̂��߁A�n�ʂɂ߂荞�񂾂��ǂ����`�F�b�N
         if (this.height < 2) {
             this.position.z = this.gHeight + 2;
             this.height = 2;
-            this.vpVel.z *= -0.1;
+            this.velocity.z *= -0.1;
         }
         // �n�ʂɂ�����x�ȏ�̑��x���A�����ȑ̐��ŐڐG�����ꍇ�A�@�̂������
-        if (this.height < 5 && (Math.abs(this.vpVel.z) > 50 || Math.abs(this.rotation.y) > 20 * Math.PI / 180 || this.rotation.x > 10 * Math.PI / 180)) {
+        if (this.height < 5 && (Math.abs(this.velocity.z) > 50 || Math.abs(this.rotation.y) > 20 * Math.PI / 180 || this.rotation.x > 10 * Math.PI / 180)) {
             this.posInit();
         }
     };
@@ -1408,7 +1409,7 @@ var Plane = (function (_super) {
             this.stickPos.y = -1;
         }
         // �@�̍��x���Ⴂ���A8�b�ȓ�ɒn�ʂɂԂ��肻���ȏꍇ�A��Ɍ�����
-        if (this.height < 1000 || this.height + this.vpVel.z * 8 < 0) {
+        if (this.height < 1000 || this.height + this.velocity.z * 8 < 0) {
             this.stickPos.y = -this.rotation.y;
             if (Math.abs(this.rotation.y) < Math.PI / 2) {
                 this.stickPos.x = -1;
@@ -1458,7 +1459,7 @@ var Plane = (function (_super) {
         // �e�ۂ̏������x����߂Ă���
         dm.set(this.gunX * 400 / 200, 400, this.gunY * 400 / 200);
         this.change_l2w(dm, oi);
-        oi.add(this.vpVel);
+        oi.add(this.velocity);
         this.gunTime = 1.0;
         // �e�ۂ̏����ʒu����߂Ă���
         dm.set(4 * 2, 10.0, 4 * -0.5);
@@ -1476,7 +1477,7 @@ var Plane = (function (_super) {
         // �@�e��ڕW�֌�����
         if (this.gunTarget >= 0) {
             c.set(world.plane[this.gunTarget].position.x, world.plane[this.gunTarget].position.y, world.plane[this.gunTarget].position.z);
-            c.addCons(world.plane[this.gunTarget].vpVel, this.gunTime);
+            c.addCons(world.plane[this.gunTarget].velocity, this.gunTime);
             world.change3d(this, c, a);
             world.change3d(this, world.plane[this.gunTarget].position, b);
             sc.x += b.x - a.x;
@@ -1519,7 +1520,7 @@ var Plane = (function (_super) {
         if (this.gunShoot && this.gunTemp++ < Plane.MAXT) {
             for (var i = 0; i < Plane.BMAX; i++) {
                 if (this.bullet[i].use === 0) {
-                    this.bullet[i].vVel.setPlus(this.vpVel, oi);
+                    this.bullet[i].vVel.setPlus(this.velocity, oi);
                     aa = Math.random();
                     this.bullet[i].position.setPlus(this.position, ni);
                     this.bullet[i].position.addCons(this.bullet[i].vVel, 0.1 * aa);
@@ -1608,7 +1609,7 @@ var Plane = (function (_super) {
                 dm.y = 40;
                 this.change_l2w(dm, oi);
                 ap.position.setPlus(this.position, ni);
-                ap.vpVel.setPlus(this.vpVel, oi);
+                ap.vpVel.setPlus(this.velocity, oi);
                 // ���ˌ�������߂�
                 switch (k % 4) {
                     case 0:
@@ -1632,7 +1633,7 @@ var Plane = (function (_super) {
                 dm.z += (k / 4) * 5;
                 this.change_l2w(dm, oi);
                 var v = oi.abs();
-                ap.aVel.setConsInv(oi, v);
+                ap.forward.setConsInv(oi, v);
                 // �e�평����
                 ap.use = 100;
                 ap.count = 0;
@@ -1930,9 +1931,9 @@ var Jflight = (function (_super) {
             if (ap.use >= 0) {
                 // �~�T�C�����������łȂ���΁A�~�T�C���{�̂�\��
                 if (ap.bom <= 0) {
-                    dm.x = ap.position.x + ap.aVel.x * 4;
-                    dm.y = ap.position.y + ap.aVel.y * 4;
-                    dm.z = ap.position.z + ap.aVel.z * 4;
+                    dm.x = ap.position.x + ap.forward.x * 4;
+                    dm.y = ap.position.y + ap.forward.y * 4;
+                    dm.z = ap.position.z + ap.forward.z * 4;
                     this.change3d(this.plane[0], dm, cp);
                     this.change3d(this.plane[0], ap.position, dm);
                     this.drawAline(cp, dm);
