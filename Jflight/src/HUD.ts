@@ -46,11 +46,11 @@ class HUD {
         this.drawLine(context, "rgb(255, 255, 255)", x - length, y, x + length, y);
     }
     public render(canvas: HTMLCanvasElement) {
-        let _w = this.canvas.width;
-        _w = 0;
+        // let _w = this.canvas.width;
+        // _w = 0;
 
-        let width = canvas.width;
-        let height = canvas.height;
+        let width = this.canvas.width;
+        let height = this.canvas.height;
         let centerX = width / 2;
         let centerY = height / 2;
 

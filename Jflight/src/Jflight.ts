@@ -37,8 +37,6 @@ class Jflight extends Applet3D {
     public static DT = 0.05;       // 計算ステップ幅
 
     // 変数
-
-    // protected mainThread = null;           // スレッドオブジェクト
     public plane: Plane[] = [];                      // 各機体オブジェクトへの配列
     protected autoFlight = true;          // 自機（plane[0]）を自動操縦にするのか
     static obj: THREE.Vector3[][] = [];            // 機体の形状（三角形の集合）
@@ -354,7 +352,7 @@ class Jflight extends Applet3D {
 
             // 弾丸が爆発中の場合、爆円表示
             if (bp.bom > 0) {
-                this.change3d(this.plane[0], bp.opVel, cp);
+                this.change3d(this.plane[0], bp.oldPosition, cp);
                 this.fillBarc(cp);
                 bp.bom--;
             }
@@ -385,9 +383,9 @@ class Jflight extends Applet3D {
                 // ミサイルの煙を表示
                 // 煙の座標はリングバッファに格納されている
                 let k = (ap.use + Missile.MOMAX + 1) % Missile.MOMAX;
-                this.change3d(this.plane[0], ap.opVel[k], dm);
+                this.change3d(this.plane[0], ap.oldPositions[k], dm);
                 for (let m = 0; m < ap.count; m++) {
-                    this.change3d(this.plane[0], ap.opVel[k], cp);
+                    this.change3d(this.plane[0], ap.oldPositions[k], cp);
                     this.drawMline(context, dm, cp);
                     k = (k + Missile.MOMAX + 1) % Missile.MOMAX;
                     dm.set(cp.x, cp.y, cp.z);

@@ -12,17 +12,19 @@ class Missile extends PhysicsState {
 
     // 変数
     // public pVel = new CVector3();       // 位置
-    
-    public opVel: CVector3[] = [];      // 昔の位置（煙の位置）
-    public vpVel = new CVector3();      // 速度
+    // public vpVel = new CVector3();      // 速度
+
+    public oldPositions: CVector3[] = [];      // 昔の位置（煙の位置）
+
     public forward = new CVector3();       // 向き（単位ベクトル）
+
     public use = 0;                     // 使用状態（0で未使用）
     public bom = 0;                     // 爆発状態（0で未爆）
     public bomm = 0;                    // 破裂状態（0で未爆）
     public count: number;               // リングバッファ長（煙の長さ）
     public targetNo: number;            // ターゲットNO（0>でロックOFF）
 
-    spheres: THREE.Mesh[] = [];
+    private spheres: THREE.Mesh[] = [];
     private explosion: THREE.Mesh;
     // テンポラリオブジェクト
 
@@ -31,7 +33,7 @@ class Missile extends PhysicsState {
     public constructor(scene: THREE.Scene) {
         super();
         for (let i = 0; i < Missile.MOMAX; i++) {
-            this.opVel.push(new CVector3());
+            this.oldPositions.push(new CVector3());
         }
 
         this.m_a0 = new CVector3();
@@ -71,7 +73,7 @@ class Missile extends PhysicsState {
         if (this.targetNo >= 0 && this.use < 100 - 15) {
 
             // 自分の速度を求める
-            let v = this.vpVel.abs();
+            let v = this.velocity.abs();
             if (Math.abs(v) < 1) {
                 v = 1;
             }
@@ -87,7 +89,7 @@ class Missile extends PhysicsState {
             }
 
             // 追尾目標との速度差を求める
-            this.m_a0.setMinus(tp.velocity, this.vpVel);
+            this.m_a0.setMinus(tp.velocity, this.velocity);
             let m = this.m_a0.abs();
 
             // 衝突予想時間を修正ありで求める
@@ -102,9 +104,9 @@ class Missile extends PhysicsState {
             }
 
             // 衝突予想時間時のターゲットの位置と自分の位置の差を求める
-            this.m_a0.x = tp.position.x + tp.velocity.x * t0 - (this.position.x + this.vpVel.x * t0);
-            this.m_a0.y = tp.position.y + tp.velocity.y * t0 - (this.position.y + this.vpVel.y * t0);
-            this.m_a0.z = tp.position.z + tp.velocity.z * t0 - (this.position.z + this.vpVel.z * t0);
+            this.m_a0.x = tp.position.x + tp.velocity.x * t0 - (this.position.x + this.velocity.x * t0);
+            this.m_a0.y = tp.position.y + tp.velocity.y * t0 - (this.position.y + this.velocity.y * t0);
+            this.m_a0.z = tp.position.z + tp.velocity.z * t0 - (this.position.z + this.velocity.z * t0);
 
             let tr = ((100 - 15) - this.use) * 0.02 + 0.5;
             if (tr > 0.1) {
@@ -136,13 +138,13 @@ class Missile extends PhysicsState {
             let bb = 1 - aa;
 
             // 現在の速度成分と向き成分を合成して新たな速度成分とする
-            let v = this.vpVel.abs();
-            this.vpVel.x = this.forward.x * v * aa + this.vpVel.x * bb;
-            this.vpVel.y = this.forward.y * v * aa + this.vpVel.y * bb;
-            this.vpVel.z = this.forward.z * v * aa + this.vpVel.z * bb;
+            let v = this.velocity.abs();
+            this.velocity.x = this.forward.x * v * aa + this.velocity.x * bb;
+            this.velocity.y = this.forward.y * v * aa + this.velocity.y * bb;
+            this.velocity.z = this.forward.z * v * aa + this.velocity.z * bb;
 
             // ミサイル加速
-            this.vpVel.addCons(this.forward, 10.0);
+            this.velocity.addCons(this.forward, 10.0);
         }
     }
 
@@ -166,7 +168,7 @@ class Missile extends PhysicsState {
         }
 
         // 重力加速
-        this.vpVel.z += Jflight.G * Jflight.DT;
+        this.velocity.z += Jflight.G * Jflight.DT;
 
         // ホーミング計算
         this.horming(world, plane);
@@ -175,10 +177,10 @@ class Missile extends PhysicsState {
         this.calcMotor(world, plane);
 
         // リングバッファに位置を保存
-        this.opVel[this.use % Missile.MOMAX].set(this.position.x, this.position.y, this.position.z);
+        this.oldPositions[this.use % Missile.MOMAX].set(this.position.x, this.position.y, this.position.z);
 
         // ミサイル移動
-        this.position.addCons(this.vpVel, Jflight.DT);
+        this.position.addCons(this.velocity, Jflight.DT);
         this.use--;
 
         // ターゲットとの当たり判定
@@ -222,9 +224,9 @@ class Missile extends PhysicsState {
             for (let m = 0; m < this.count; m++) {
                 // this.change3d(this.plane[0], ap.opVel[k], cp);
                 // this.drawMline(context, dm, cp);
-                this.spheres[k].position.x = this.opVel[k].x;
-                this.spheres[k].position.y = this.opVel[k].y;
-                this.spheres[k].position.z = this.opVel[k].z;
+                this.spheres[k].position.x = this.oldPositions[k].x;
+                this.spheres[k].position.y = this.oldPositions[k].y;
+                this.spheres[k].position.z = this.oldPositions[k].z;
                 this.spheres[k].visible = true;
                 k = (k + Missile.MOMAX + 1) % Missile.MOMAX;
                 // dm.set(cp.x, cp.y, cp.z);

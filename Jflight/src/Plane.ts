@@ -42,10 +42,11 @@ class Plane extends PhysicsState {
 
     // public position = new CVector3();    // 機体位置（ワールド座標系）
     // public vpVel = new CVector3();   // 機体速度（ワールド座標系）
-
-    public vVel = new CVector3();    // 機体速度（機体座標系）
-    public gVel = new CVector3();    // 機体加速度（ワールド座標系）
     // public aVel = new THREE.Euler();    // 機体向き（オイラー角）
+
+    public localVelocity = new CVector3();    // 機体速度（機体座標系）
+    public gVel = new CVector3();    // 機体加速度（ワールド座標系）
+
     public vaVel = new CVector3();   // 機体回転速度（オイラー角）
     public gcVel = new CVector3();   // 弾丸の将来予想位置
     public height: number;           // 機体の高度
@@ -75,7 +76,8 @@ class Plane extends PhysicsState {
 
     public bullet: Bullet[] = [];         // 各弾丸オブジェクト
     public gunTarget: number;           // 主目標の機体No.
-    public targetSx: number; targetSy: number;  // 主目標の位置（スクリーン座標）
+    public targetSx: number;
+    targetSy: number;  // 主目標の位置（スクリーン座標）
     public targetDis: number;        // 主目標までの距離
     public gunTime: number;          // 弾丸衝突予想時間（機銃の追尾に使用）
 
@@ -140,13 +142,15 @@ class Plane extends PhysicsState {
         this.position.z = 5000;
         this.gHeight = 0;
         this.height = 5000;
-        this.velocity.x = 200.0;
+
         this.rotation.set(0, 0, Math.PI / 2);
+
+        this.velocity.x = 200.0;
         this.velocity.y = 0.0;
         this.velocity.z = 0.0;
         this.gVel.set(0, 0, 0);
         this.vaVel.set(0, 0, 0);
-        this.vVel.set(0, 0, 0);
+        this.localVelocity.set(0, 0, 0);
         this.power = 5;
         this.throttle = 5;
         this.heatWait = false;
@@ -171,37 +175,37 @@ class Plane extends PhysicsState {
 
         //  右翼???
         this.wings[0].position.set(3, 0.1, 0);
-        this.wings[0].xVel.set(Math.cos(wa), -Math.sin(wa), Math.sin(wa2));
+        this.wings[0].unitX.set(Math.cos(wa), -Math.sin(wa), Math.sin(wa2));
         this.wings[0].yVel.set(Math.sin(wa), Math.cos(wa), 0);
         this.wings[0].zVel.set(0, 0, 1);
 
         // 　左翼???
         this.wings[1].position.set(-3, 0.1, 0);
-        this.wings[1].xVel.set(Math.cos(wa), Math.sin(wa), -Math.sin(wa2));
+        this.wings[1].unitX.set(Math.cos(wa), Math.sin(wa), -Math.sin(wa2));
         this.wings[1].yVel.set(-Math.sin(wa), Math.cos(wa), 0);
         this.wings[1].zVel.set(0, 0, 1);
 
         // 水平尾翼
         this.wings[2].position.set(0, -10, 2);
-        this.wings[2].xVel.set(1, 0, 0);
+        this.wings[2].unitX.set(1, 0, 0);
         this.wings[2].yVel.set(0, 1, 0);
         this.wings[2].zVel.set(0, 0, 1);
 
         // 垂直尾翼
         this.wings[3].position.set(0, -10, 0);
-        this.wings[3].xVel.set(0, 0, 1);
+        this.wings[3].unitX.set(0, 0, 1);
         this.wings[3].yVel.set(0, 1, 0);
         this.wings[3].zVel.set(1, 0, 0);
 
         // 右エンジン
         this.wings[4].position.set(5, 0, 0);
-        this.wings[4].xVel.set(1, 0, 0);
+        this.wings[4].unitX.set(1, 0, 0);
         this.wings[4].yVel.set(0, 1, 0);
         this.wings[4].zVel.set(0, 0, 1);
 
         // 左エンジン
         this.wings[5].position.set(-5, 0, 0);
-        this.wings[5].xVel.set(1, 0, 0);
+        this.wings[5].unitX.set(1, 0, 0);
         this.wings[5].yVel.set(0, 1, 0);
         this.wings[5].zVel.set(0, 0, 1);
 
@@ -241,7 +245,7 @@ class Plane extends PhysicsState {
             this.mass += wing.mass;
             wing.aAngle = 0;
             wing.bAngle = 0;
-            wing.vVel.set(0, 0, 1);
+            // wing.forward.set(0, 0, 1);
             this.iMass.x += wing.mass * (Math.abs(wing.position.x) + 1) * m_i * m_i;
             this.iMass.y += wing.mass * (Math.abs(wing.position.y) + 1) * m_i * m_i;
             this.iMass.z += wing.mass * (Math.abs(wing.position.z) + 1) * m_i * m_i;
@@ -497,7 +501,7 @@ class Plane extends PhysicsState {
         this.wings[5].aAngle = 0;
         this.wings[5].bAngle = 0;
 
-        this.change_w2l(this.velocity, this.vVel);
+        this.change_w2l(this.velocity, this.localVelocity);
         this.onGround = false;
 
         if (this.height < 5) {
@@ -627,8 +631,9 @@ class Plane extends PhysicsState {
         this.gunShoot = false;
         this.aamShoot = false;
 
-        if (this.target < 0 || !world.plane[this.target].use)
+        if (this.target < 0 || !world.plane[this.target].use) {
             return;
+        }
 
         this.power = 4;
         this.throttle = this.power;
@@ -743,7 +748,7 @@ class Plane extends PhysicsState {
     // 機銃の弾丸移動と発射処理
 
     public moveBullet(world: Jflight) {
-        let aa;
+        // let aa;
 
         let sc = new CVector3();
         let a = new CVector3();
@@ -829,10 +834,10 @@ class Plane extends PhysicsState {
             for (let i = 0; i < Plane.BMAX; i++) {
                 if (this.bullet[i].use === 0) {
                     this.bullet[i].velocity.setPlus(this.velocity, oi);
-                    aa = Math.random();
+                    let aa = Math.random();
                     this.bullet[i].position.setPlus(this.position, ni);
                     this.bullet[i].position.addCons(this.bullet[i].velocity, 0.1 * aa);
-                    this.bullet[i].opVel.set(this.bullet[i].position.x, this.bullet[i].position.y, this.bullet[i].position.z);
+                    this.bullet[i].oldPosition.set(this.bullet[i].position.x, this.bullet[i].position.y, this.bullet[i].position.z);
                     this.bullet[i].bom = 0;
                     this.bullet[i].use = 15;
                     break;
@@ -907,7 +912,7 @@ class Plane extends PhysicsState {
                 this.change_l2w(dm, oi);
 
                 ap.position.setPlus(this.position, ni);
-                ap.vpVel.setPlus(this.velocity, oi);
+                ap.velocity.setPlus(this.velocity, oi);
 
                 // 発射向きを決める
 

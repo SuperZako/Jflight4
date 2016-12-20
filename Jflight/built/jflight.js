@@ -496,11 +496,19 @@ var Wing = (function (_super) {
     // �R���X�g���N�^
     function Wing() {
         var _this = _super.call(this) || this;
+        //        ���W�n
+        //     Z
+        //     ^  Y
+        //     | /
+        //     |/
+        //     -------->X
+        // �ϐ�
+        // public pVel: CVector3;    // �����S�ʒu�i�@�̍��W�j
+        _this.unitX = new CVector3(); // �����W�w�P�ʃx�N�g���i�@�̍��W�j
+        _this.yVel = new CVector3(); // �����W�x�P�ʃx�N�g���i�@�̍��W�j
+        _this.zVel = new CVector3(); // �����W�y�P�ʃx�N�g���i�@�̍��W�j
         // this.pVel = new CVector3();
-        _this.xVel = new CVector3();
-        _this.yVel = new CVector3();
-        _this.zVel = new CVector3();
-        _this.vVel = new CVector3();
+        // this.forward = new CVector3();
         _this.fVel = new CVector3();
         _this.m_pp = new CVector3();
         _this.m_op = new CVector3();
@@ -522,19 +530,19 @@ var Wing = (function (_super) {
     Wing.prototype.calc = function (plane, ve, no, boost) {
         var vv, t0, n, at, sin, cos, rr, cl, cd, ff, dx, dy, dz;
         // �@�̂̑��x�Ɖ�]���A���̈ʒu���痃�ɂ����鑬�x����߂�i�O�όv�Z�j
-        this.m_vp.x = plane.vVel.x + this.position.y * plane.vaVel.z - this.position.z * plane.vaVel.y;
-        this.m_vp.y = plane.vVel.y + this.position.z * plane.vaVel.x - this.position.x * plane.vaVel.z;
-        this.m_vp.z = plane.vVel.z + this.position.x * plane.vaVel.y - this.position.y * plane.vaVel.x;
+        this.m_vp.x = plane.localVelocity.x + this.position.y * plane.vaVel.z - this.position.z * plane.vaVel.y;
+        this.m_vp.y = plane.localVelocity.y + this.position.z * plane.vaVel.x - this.position.x * plane.vaVel.z;
+        this.m_vp.z = plane.localVelocity.z + this.position.x * plane.vaVel.y - this.position.y * plane.vaVel.x;
         // ���̂Ђ˂���ɁA��{���W�x�N�g�����]
         sin = Math.sin(this.bAngle);
         cos = Math.cos(this.bAngle);
-        this.m_qx.x = this.xVel.x * cos - this.zVel.x * sin;
-        this.m_qx.y = this.xVel.y * cos - this.zVel.y * sin;
-        this.m_qx.z = this.xVel.z * cos - this.zVel.z * sin;
+        this.m_qx.x = this.unitX.x * cos - this.zVel.x * sin;
+        this.m_qx.y = this.unitX.y * cos - this.zVel.y * sin;
+        this.m_qx.z = this.unitX.z * cos - this.zVel.z * sin;
         this.m_qy.set(this.yVel.x, this.yVel.y, this.yVel.z);
-        this.m_qz.x = this.xVel.x * sin + this.zVel.x * cos;
-        this.m_qz.y = this.xVel.y * sin + this.zVel.y * cos;
-        this.m_qz.z = this.xVel.z * sin + this.zVel.z * cos;
+        this.m_qz.x = this.unitX.x * sin + this.zVel.x * cos;
+        this.m_qz.y = this.unitX.y * sin + this.zVel.y * cos;
+        this.m_qz.z = this.unitX.z * sin + this.zVel.z * cos;
         sin = Math.sin(this.aAngle);
         cos = Math.cos(this.aAngle);
         this.m_wx.set(this.m_qx.x, this.m_qx.y, this.m_qx.z);
@@ -609,7 +617,7 @@ var Wing = (function (_super) {
             // ���͂������
             this.fVel.addCons(this.m_wy, ff);
         }
-        this.vVel.set(this.m_wy.x, this.m_wy.y, this.m_wy.z);
+        // this.forward.set(this.m_wy.x, this.m_wy.y, this.m_wy.z);
     };
     return Wing;
 }(PhysicsState));
@@ -625,8 +633,8 @@ var Bullet = (function (_super) {
         var _this = _super.call(this) || this;
         // �ϐ�
         // public pVel = new CVector3();         // �ʒu
-        _this.opVel = new CVector3(); // �P�X�e�b�v�O�̈ʒu
         // public vVel = new CVector3();         // ���x
+        _this.oldPosition = new CVector3(); // �P�X�e�b�v�O�̈ʒu
         _this.use = 0; // �g�p��ԁi0�Ŗ��g�p�j
         _this.bom = 0; // ������ԁi0�Ŗ����j
         // �e���|�����p�I�u�W�F�N�g
@@ -646,7 +654,7 @@ var Bullet = (function (_super) {
         // �d�͉���
         this.velocity.z += Jflight.G * Jflight.DT;
         // ��O�̈ʒu��ۑ�
-        this.opVel.set(this.position.x, this.position.y, this.position.z);
+        this.oldPosition.set(this.position.x, this.position.y, this.position.z);
         // �ړ�
         this.position.addCons(this.velocity, Jflight.DT);
         this.use--;
@@ -678,7 +686,7 @@ var Bullet = (function (_super) {
             // ���݂̒e�ۂ̈ʒu�ƖڕW�Ƃ̍��x�N�g������߂�
             this.m_a.setMinus(this.position, world.plane[plane.gunTarget].position);
             // ��O�̒e�ۂ̈ʒu�ƖڕW�Ƃ̍��x�N�g������߂�
-            this.m_b.setMinus(this.opVel, world.plane[plane.gunTarget].position);
+            this.m_b.setMinus(this.oldPosition, world.plane[plane.gunTarget].position);
             // ��O�̒e�ۂ̈ʒu�ƌ��݂̒e�ۂ̈ʒu�Ƃ̍��x�N�g������߂�
             this.m_vv.setCons(this.velocity, Jflight.DT);
             var v0 = this.m_vv.abs();
@@ -722,15 +730,15 @@ var Missile = (function (_super) {
         var _this = _super.call(this) || this;
         // �ϐ�
         // public pVel = new CVector3();       // �ʒu
-        _this.opVel = []; // �̂̈ʒu�i���̈ʒu�j
-        _this.vpVel = new CVector3(); // ���x
+        // public vpVel = new CVector3();      // ���x
+        _this.oldPositions = []; // �̂̈ʒu�i���̈ʒu�j
         _this.forward = new CVector3(); // �����i�P�ʃx�N�g���j
         _this.use = 0; // �g�p��ԁi0�Ŗ��g�p�j
         _this.bom = 0; // ������ԁi0�Ŗ����j
         _this.bomm = 0; // �j���ԁi0�Ŗ����j
         _this.spheres = [];
         for (var i = 0; i < Missile.MOMAX; i++) {
-            _this.opVel.push(new CVector3());
+            _this.oldPositions.push(new CVector3());
         }
         _this.m_a0 = new CVector3();
         var geometries = [];
@@ -760,7 +768,7 @@ var Missile = (function (_super) {
         // ���b�NON����Ă��āA�c��X�e�b�v��85�ȉ��Ȃ�z�[�~���O����
         if (this.targetNo >= 0 && this.use < 100 - 15) {
             // �����̑��x����߂�
-            var v = this.vpVel.abs();
+            var v = this.velocity.abs();
             if (Math.abs(v) < 1) {
                 v = 1;
             }
@@ -773,7 +781,7 @@ var Missile = (function (_super) {
                 l = 0.001;
             }
             // �ǔ��ڕW�Ƃ̑��x������߂�
-            this.m_a0.setMinus(tp.velocity, this.vpVel);
+            this.m_a0.setMinus(tp.velocity, this.velocity);
             var m = this.m_a0.abs();
             // �Փ˗\�z���Ԃ�C������ŋ��߂�
             var t0 = l / v * (1.0 - m / (800 + 1));
@@ -785,9 +793,9 @@ var Missile = (function (_super) {
                 t0 = 5;
             }
             // �Փ˗\�z���Ԏ��̃^�[�Q�b�g�̈ʒu�Ǝ����̈ʒu�̍�����߂�
-            this.m_a0.x = tp.position.x + tp.velocity.x * t0 - (this.position.x + this.vpVel.x * t0);
-            this.m_a0.y = tp.position.y + tp.velocity.y * t0 - (this.position.y + this.vpVel.y * t0);
-            this.m_a0.z = tp.position.z + tp.velocity.z * t0 - (this.position.z + this.vpVel.z * t0);
+            this.m_a0.x = tp.position.x + tp.velocity.x * t0 - (this.position.x + this.velocity.x * t0);
+            this.m_a0.y = tp.position.y + tp.velocity.y * t0 - (this.position.y + this.velocity.y * t0);
+            this.m_a0.z = tp.position.z + tp.velocity.z * t0 - (this.position.z + this.velocity.z * t0);
             var tr = ((100 - 15) - this.use) * 0.02 + 0.5;
             if (tr > 0.1) {
                 tr = 0.1;
@@ -812,12 +820,12 @@ var Missile = (function (_super) {
             var aa = 1.0 / 20;
             var bb = 1 - aa;
             // ���݂̑��x�����ƌ���������������ĐV���ȑ��x�����Ƃ���
-            var v = this.vpVel.abs();
-            this.vpVel.x = this.forward.x * v * aa + this.vpVel.x * bb;
-            this.vpVel.y = this.forward.y * v * aa + this.vpVel.y * bb;
-            this.vpVel.z = this.forward.z * v * aa + this.vpVel.z * bb;
+            var v = this.velocity.abs();
+            this.velocity.x = this.forward.x * v * aa + this.velocity.x * bb;
+            this.velocity.y = this.forward.y * v * aa + this.velocity.y * bb;
+            this.velocity.z = this.forward.z * v * aa + this.velocity.z * bb;
             // �~�T�C������
-            this.vpVel.addCons(this.forward, 10.0);
+            this.velocity.addCons(this.forward, 10.0);
         }
     };
     // �~�T�C���ړ��A�G�@�Ƃ̂����蔻��A�n�ʂƂ̓����蔻���s��
@@ -834,15 +842,15 @@ var Missile = (function (_super) {
             return;
         }
         // �d�͉���
-        this.vpVel.z += Jflight.G * Jflight.DT;
+        this.velocity.z += Jflight.G * Jflight.DT;
         // �z�[�~���O�v�Z
         this.horming(world, plane);
         // �~�T�C�����[�^�[�v�Z
         this.calcMotor(world, plane);
         // �����O�o�b�t�@�Ɉʒu��ۑ�
-        this.opVel[this.use % Missile.MOMAX].set(this.position.x, this.position.y, this.position.z);
+        this.oldPositions[this.use % Missile.MOMAX].set(this.position.x, this.position.y, this.position.z);
         // �~�T�C���ړ�
-        this.position.addCons(this.vpVel, Jflight.DT);
+        this.position.addCons(this.velocity, Jflight.DT);
         this.use--;
         // �^�[�Q�b�g�Ƃ̓����蔻��
         // ���b�N���Ă���ΏۂƂ̂ݓ����蔻�肷��
@@ -871,9 +879,9 @@ var Missile = (function (_super) {
             for (var m = 0; m < this.count; m++) {
                 // this.change3d(this.plane[0], ap.opVel[k], cp);
                 // this.drawMline(context, dm, cp);
-                this.spheres[k].position.x = this.opVel[k].x;
-                this.spheres[k].position.y = this.opVel[k].y;
-                this.spheres[k].position.z = this.opVel[k].z;
+                this.spheres[k].position.x = this.oldPositions[k].x;
+                this.spheres[k].position.y = this.oldPositions[k].y;
+                this.spheres[k].position.z = this.oldPositions[k].z;
                 this.spheres[k].visible = true;
                 k = (k + Missile.MOMAX + 1) % Missile.MOMAX;
             }
@@ -921,9 +929,9 @@ var Plane = (function (_super) {
         _this.wings = []; // �e��(0,1-�嗃,2-��������,3-��������,4,5-�G���W��)
         // public position = new CVector3();    // �@�̈ʒu�i���[���h���W�n�j
         // public vpVel = new CVector3();   // �@�̑��x�i���[���h���W�n�j
-        _this.vVel = new CVector3(); // �@�̑��x�i�@�̍��W�n�j
-        _this.gVel = new CVector3(); // �@�̉����x�i���[���h���W�n�j
         // public aVel = new THREE.Euler();    // �@�̌����i�I�C���[�p�j
+        _this.localVelocity = new CVector3(); // �@�̑��x�i�@�̍��W�n�j
+        _this.gVel = new CVector3(); // �@�̉����x�i���[���h���W�n�j
         _this.vaVel = new CVector3(); // �@�̉�]���x�i�I�C���[�p�j
         _this.gcVel = new CVector3(); // �e�ۂ̏����\�z�ʒu
         _this.iMass = new CVector3(); // �@�̊e���̊������[�����g
@@ -968,13 +976,13 @@ var Plane = (function (_super) {
         this.position.z = 5000;
         this.gHeight = 0;
         this.height = 5000;
-        this.velocity.x = 200.0;
         this.rotation.set(0, 0, Math.PI / 2);
+        this.velocity.x = 200.0;
         this.velocity.y = 0.0;
         this.velocity.z = 0.0;
         this.gVel.set(0, 0, 0);
         this.vaVel.set(0, 0, 0);
-        this.vVel.set(0, 0, 0);
+        this.localVelocity.set(0, 0, 0);
         this.power = 5;
         this.throttle = 5;
         this.heatWait = false;
@@ -995,32 +1003,32 @@ var Plane = (function (_super) {
         // �e���̈ʒu�ƌ�����Z�b�g
         //  �E��???
         this.wings[0].position.set(3, 0.1, 0);
-        this.wings[0].xVel.set(Math.cos(wa), -Math.sin(wa), Math.sin(wa2));
+        this.wings[0].unitX.set(Math.cos(wa), -Math.sin(wa), Math.sin(wa2));
         this.wings[0].yVel.set(Math.sin(wa), Math.cos(wa), 0);
         this.wings[0].zVel.set(0, 0, 1);
         // �@����???
         this.wings[1].position.set(-3, 0.1, 0);
-        this.wings[1].xVel.set(Math.cos(wa), Math.sin(wa), -Math.sin(wa2));
+        this.wings[1].unitX.set(Math.cos(wa), Math.sin(wa), -Math.sin(wa2));
         this.wings[1].yVel.set(-Math.sin(wa), Math.cos(wa), 0);
         this.wings[1].zVel.set(0, 0, 1);
         // ��������
         this.wings[2].position.set(0, -10, 2);
-        this.wings[2].xVel.set(1, 0, 0);
+        this.wings[2].unitX.set(1, 0, 0);
         this.wings[2].yVel.set(0, 1, 0);
         this.wings[2].zVel.set(0, 0, 1);
         // ��������
         this.wings[3].position.set(0, -10, 0);
-        this.wings[3].xVel.set(0, 0, 1);
+        this.wings[3].unitX.set(0, 0, 1);
         this.wings[3].yVel.set(0, 1, 0);
         this.wings[3].zVel.set(1, 0, 0);
         // �E�G���W��
         this.wings[4].position.set(5, 0, 0);
-        this.wings[4].xVel.set(1, 0, 0);
+        this.wings[4].unitX.set(1, 0, 0);
         this.wings[4].yVel.set(0, 1, 0);
         this.wings[4].zVel.set(0, 0, 1);
         // ���G���W��
         this.wings[5].position.set(-5, 0, 0);
-        this.wings[5].xVel.set(1, 0, 0);
+        this.wings[5].unitX.set(1, 0, 0);
         this.wings[5].yVel.set(0, 1, 0);
         this.wings[5].zVel.set(0, 0, 1);
         // �e���̎��ʂ�Z�b�g
@@ -1053,7 +1061,7 @@ var Plane = (function (_super) {
             this.mass += wing.mass;
             wing.aAngle = 0;
             wing.bAngle = 0;
-            wing.vVel.set(0, 0, 1);
+            // wing.forward.set(0, 0, 1);
             this.iMass.x += wing.mass * (Math.abs(wing.position.x) + 1) * m_i * m_i;
             this.iMass.y += wing.mass * (Math.abs(wing.position.y) + 1) * m_i * m_i;
             this.iMass.z += wing.mass * (Math.abs(wing.position.z) + 1) * m_i * m_i;
@@ -1249,7 +1257,7 @@ var Plane = (function (_super) {
         this.wings[4].bAngle = 0;
         this.wings[5].aAngle = 0;
         this.wings[5].bAngle = 0;
-        this.change_w2l(this.velocity, this.vVel);
+        this.change_w2l(this.velocity, this.localVelocity);
         this.onGround = false;
         if (this.height < 5) {
             this.onGround = true;
@@ -1352,8 +1360,9 @@ var Plane = (function (_super) {
         var m, mm;
         this.gunShoot = false;
         this.aamShoot = false;
-        if (this.target < 0 || !world.plane[this.target].use)
+        if (this.target < 0 || !world.plane[this.target].use) {
             return;
+        }
         this.power = 4;
         this.throttle = this.power;
         this.stickPos.z = 0;
@@ -1448,7 +1457,7 @@ var Plane = (function (_super) {
     };
     // �@�e�̒e�ۈړ��Ɣ��ˏ���
     Plane.prototype.moveBullet = function (world) {
-        var aa;
+        // let aa;
         var sc = new CVector3();
         var a = new CVector3();
         var b = new CVector3();
@@ -1521,10 +1530,10 @@ var Plane = (function (_super) {
             for (var i = 0; i < Plane.BMAX; i++) {
                 if (this.bullet[i].use === 0) {
                     this.bullet[i].velocity.setPlus(this.velocity, oi);
-                    aa = Math.random();
+                    var aa = Math.random();
                     this.bullet[i].position.setPlus(this.position, ni);
                     this.bullet[i].position.addCons(this.bullet[i].velocity, 0.1 * aa);
-                    this.bullet[i].opVel.set(this.bullet[i].position.x, this.bullet[i].position.y, this.bullet[i].position.z);
+                    this.bullet[i].oldPosition.set(this.bullet[i].position.x, this.bullet[i].position.y, this.bullet[i].position.z);
                     this.bullet[i].bom = 0;
                     this.bullet[i].use = 15;
                     break;
@@ -1609,7 +1618,7 @@ var Plane = (function (_super) {
                 dm.y = 40;
                 this.change_l2w(dm, oi);
                 ap.position.setPlus(this.position, ni);
-                ap.vpVel.setPlus(this.velocity, oi);
+                ap.velocity.setPlus(this.velocity, oi);
                 // ���ˌ�������߂�
                 switch (k % 4) {
                     case 0:
@@ -1678,7 +1687,6 @@ var Jflight = (function (_super) {
         var _this = _super.call(this) || this;
         _this.hudCanvas = hudCanvas;
         // �ϐ�
-        // protected mainThread = null;           // �X���b�h�I�u�W�F�N�g
         _this.plane = []; // �e�@�̃I�u�W�F�N�g�ւ̔z��
         _this.autoFlight = true; // ���@�iplane[0]�j��������c�ɂ���̂�
         // �e���|�����I�u�W�F�N�g
@@ -1915,7 +1923,7 @@ var Jflight = (function (_super) {
             }
             // �e�ۂ��������̏ꍇ�A���~�\��
             if (bp.bom > 0) {
-                this.change3d(this.plane[0], bp.opVel, cp);
+                this.change3d(this.plane[0], bp.oldPosition, cp);
                 this.fillBarc(cp);
                 bp.bom--;
             }
@@ -1941,9 +1949,9 @@ var Jflight = (function (_super) {
                 // �~�T�C���̉���\��
                 // ���̍��W�̓����O�o�b�t�@�Ɋi�[����Ă���
                 var k = (ap.use + Missile.MOMAX + 1) % Missile.MOMAX;
-                this.change3d(this.plane[0], ap.opVel[k], dm);
+                this.change3d(this.plane[0], ap.oldPositions[k], dm);
                 for (var m = 0; m < ap.count; m++) {
-                    this.change3d(this.plane[0], ap.opVel[k], cp);
+                    this.change3d(this.plane[0], ap.oldPositions[k], cp);
                     this.drawMline(context, dm, cp);
                     k = (k + Missile.MOMAX + 1) % Missile.MOMAX;
                     dm.set(cp.x, cp.y, cp.z);
@@ -2052,10 +2060,10 @@ var HUD = (function () {
         this.drawLine(context, "rgb(255, 255, 255)", x - length, y, x + length, y);
     };
     HUD.prototype.render = function (canvas) {
-        var _w = this.canvas.width;
-        _w = 0;
-        var width = canvas.width;
-        var height = canvas.height;
+        // let _w = this.canvas.width;
+        // _w = 0;
+        var width = this.canvas.width;
+        var height = this.canvas.height;
         var centerX = width / 2;
         var centerY = height / 2;
         var context = canvas.getContext("2d");

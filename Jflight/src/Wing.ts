@@ -16,15 +16,18 @@ class Wing extends PhysicsState {
 
     // 変数
     // public pVel: CVector3;    // 翼中心位置（機体座標）
-    public xVel: CVector3;    // 翼座標Ｘ単位ベクトル（機体座標）
-    public yVel: CVector3;    // 翼座標Ｙ単位ベクトル（機体座標）
-    public zVel: CVector3;    // 翼座標Ｚ単位ベクトル（機体座標）
+
+    public unitX = new CVector3();   // 翼座標Ｘ単位ベクトル（機体座標）
+    public yVel = new CVector3();   // 翼座標Ｙ単位ベクトル（機体座標）
+    public zVel = new CVector3();   // 翼座標Ｚ単位ベクトル（機体座標）
     public mass: number;      // 翼の質量
     public sVal: number;      // 翼面積
     public fVel: CVector3;    // 翼にかかっている力
     public aAngle: number;    // 翼のＸ軸ひねり角度（rad）
     public bAngle: number;    // 翼のＹ軸ひねり角度（rad）
-    public vVel: CVector3;    // 翼のひねりを考慮したＹ単位ベクトル（機体座標）
+
+    // public forward: CVector3;    // 翼のひねりを考慮したＹ単位ベクトル（機体座標）
+
     public tVal: number;      // エンジンの推力（0で通常の翼）
 
     // テンポラリオブジェクト
@@ -37,10 +40,8 @@ class Wing extends PhysicsState {
     public constructor() {
         super();
         // this.pVel = new CVector3();
-        this.xVel = new CVector3();
-        this.yVel = new CVector3();
-        this.zVel = new CVector3();
-        this.vVel = new CVector3();
+
+        // this.forward = new CVector3();
         this.fVel = new CVector3();
 
         this.m_pp = new CVector3();
@@ -65,24 +66,24 @@ class Wing extends PhysicsState {
         let vv, t0, n, at, sin, cos, rr, cl, cd, ff, dx, dy, dz;
 
         // 機体の速度と回転率、翼の位置から翼における速度を求める（外積計算）
-        this.m_vp.x = plane.vVel.x + this.position.y * plane.vaVel.z - this.position.z * plane.vaVel.y;
-        this.m_vp.y = plane.vVel.y + this.position.z * plane.vaVel.x - this.position.x * plane.vaVel.z;
-        this.m_vp.z = plane.vVel.z + this.position.x * plane.vaVel.y - this.position.y * plane.vaVel.x;
+        this.m_vp.x = plane.localVelocity.x + this.position.y * plane.vaVel.z - this.position.z * plane.vaVel.y;
+        this.m_vp.y = plane.localVelocity.y + this.position.z * plane.vaVel.x - this.position.x * plane.vaVel.z;
+        this.m_vp.z = plane.localVelocity.z + this.position.x * plane.vaVel.y - this.position.y * plane.vaVel.x;
 
         // 翼のひねりを基に、基本座標ベクトルを回転
 
         sin = Math.sin(this.bAngle);
         cos = Math.cos(this.bAngle);
 
-        this.m_qx.x = this.xVel.x * cos - this.zVel.x * sin;
-        this.m_qx.y = this.xVel.y * cos - this.zVel.y * sin;
-        this.m_qx.z = this.xVel.z * cos - this.zVel.z * sin;
+        this.m_qx.x = this.unitX.x * cos - this.zVel.x * sin;
+        this.m_qx.y = this.unitX.y * cos - this.zVel.y * sin;
+        this.m_qx.z = this.unitX.z * cos - this.zVel.z * sin;
 
         this.m_qy.set(this.yVel.x, this.yVel.y, this.yVel.z);
 
-        this.m_qz.x = this.xVel.x * sin + this.zVel.x * cos;
-        this.m_qz.y = this.xVel.y * sin + this.zVel.y * cos;
-        this.m_qz.z = this.xVel.z * sin + this.zVel.z * cos;
+        this.m_qz.x = this.unitX.x * sin + this.zVel.x * cos;
+        this.m_qz.y = this.unitX.y * sin + this.zVel.y * cos;
+        this.m_qz.z = this.unitX.z * sin + this.zVel.z * cos;
 
         sin = Math.sin(this.aAngle);
         cos = Math.cos(this.aAngle);
@@ -188,7 +189,7 @@ class Wing extends PhysicsState {
 
             this.fVel.addCons(this.m_wy, ff);
         }
-        this.vVel.set(this.m_wy.x, this.m_wy.y, this.m_wy.z);
+        // this.forward.set(this.m_wy.x, this.m_wy.y, this.m_wy.z);
     }
 
 }
