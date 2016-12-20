@@ -1,54 +1,92 @@
 ﻿
 
 class HUD {
-    lines: THREE.Line[] = [];
-
-    public constructor(scene: THREE.Scene) {
-
-
-        // let distance = 10000;
-        let v1 = new THREE.Vector3(10, 100, 0);
-        let v2 = new THREE.Vector3(-10, 100, 0);
-
-        // for (let i = -180; i <= 180; i += 10) {
-        {
-            let i= 0;
-            //geometryの宣言と生成
-            let geometry = new THREE.Geometry();
-
-            let v3 = v1.clone();
-            let v4 = v2.clone();
-
-            let m = new THREE.Matrix4();
-            m.makeRotationX(i * Math.PI / 180);
-
-            v3.applyMatrix4(m);
-            v4.applyMatrix4(m);
-            geometry.vertices.push(v3);
-            geometry.vertices.push(v4);
-
-            let line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: 0xffffff }));
-            this.lines.push(line);
-
-            scene.add(line);
-        }
+    //mouseX: number;
+    //mouseY: number;
+    public constructor(private canvas: HTMLCanvasElement, private plane: Plane) {
     }
 
-    public rotationZ(z: number) {
+    private drawLine(context: CanvasRenderingContext2D, strokeStyle: string, x1: number, y1: number, x2: number, y2: number) {
 
-        for (let line of this.lines) {
-            line.rotation.z = z;
-        }
+        context.save();
 
+        context.strokeStyle = strokeStyle;
+        //描画することを宣言する
+        context.beginPath();
+        //描き始め（始点）を決定する
+        context.moveTo(x1, y1);
+        //始点から指定の座標まで線を引く
+        context.lineTo(x2, y2);
+        //引き続き線を引いていく
+        //context.lineTo(0, 100);
+        //context.lineTo(51, 15);
+        //描画を終了する
+        context.closePath();
 
-        //this.line2.rotation.z = z;
+        //上記記述は定義情報である。この命令で線を描く。
+        context.stroke();
+        context.restore();
     }
 
-    public setPosition(x: number, y: number, z: number) {
-        for (let line of this.lines) {
-            line.position.set(x, y, z);
+    private drawCircle(context: CanvasRenderingContext2D, strokeStyle: string, centerX: number, centerY: number, radius: number) {
+        context.save();
+        context.beginPath();
+        context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+        //context.fillStyle = 'green';
+        //context.fill();
+        context.lineWidth = 2;
+        context.strokeStyle = strokeStyle;
+        context.stroke();
+        context.restore();
+    }
+
+
+    public drawCross(context: CanvasRenderingContext2D, x: number, y: number, length: number) {
+        this.drawLine(context, "rgb(255, 255, 255)", x, y - length, x, y + length);
+        this.drawLine(context, "rgb(255, 255, 255)", x - length, y, x + length, y);
+    }
+    public render(canvas: HTMLCanvasElement) {
+        let _w = this.canvas.width;
+        _w = 0;
+
+        let width = canvas.width;
+        let height = canvas.height;
+        let centerX = width / 2;
+        let centerY = height / 2;
+
+        let context = canvas.getContext("2d");
+        if (context) {
+            this.drawCross(context, centerX, centerY, 15);
+
+            let radius = height / 2 * 0.8;
+            this.drawCircle(context, "rgb(255, 255, 255)", centerX, centerY, height / 2 * 0.8);
+
+
+            this.drawCircle(context, "rgb(255, 255, 255)", centerX + this.plane.stickPos.y * radius, centerY - this.plane.stickPos.x * radius, 10);
+
+            this.drawCircle(context, "rgb(255, 255, 255)", centerX + Jflight.mouseX, centerY + Jflight.mouseY, 10);
+
+            let y = this.plane.aVel.y;
+
+            context.save();
+            // Move registration point to the center of the canvas
+            context.translate(width / 2, height / 2);
+
+            // Rotate 1 degree
+            context.rotate(-y);
+
+            // Move registration point back to the top left corner of canvas
+            context.translate(-width / 2, -height / 2);
+
+
+            let x = -this.plane.aVel.x;
+            for (let i = -170; i <= 180; i += 10) {
+                // let x = -this.plane[0].aVel.x + (i * Math.PI / 180);
+                // let distance = 300;
+                this.drawLine(context, "rgb(255, 255, 255)", centerX - 150, centerY + i * 20 + Math.tan(x) * centerY, centerX + 150, centerY + i * 20 + Math.tan(x) * centerY);
+            }
+            context.restore();
+
         }
-        //this.line.position.set(x, y, z);
-        //this.line2.position.set(x, y, z);
     }
 }

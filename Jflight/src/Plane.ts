@@ -23,7 +23,14 @@ class Plane {
 
     // ワールド座標→機体座標への変換行列
 
-    protected cosa: number; cosb: number; cosc: number; sina: number; sinb: number; sinc: number;
+    protected cosa: number;
+    protected cosb: number;
+    protected cosc: number;
+
+    protected sina: number;
+    protected sinb: number;
+    protected sinc: number;
+
     matrix = new THREE.Matrix4();
 
 
@@ -31,7 +38,7 @@ class Plane {
     public use: boolean;             // この機体を使用するか
     public no: number;                  // 機体No.
     public wings: Wing[] = [];       // 各翼(0,1-主翼,2-水平尾翼,3-垂直尾翼,4,5-エンジン)
-    public pVel = new CVector3();    // 機体位置（ワールド座標系）
+    public position = new CVector3();    // 機体位置（ワールド座標系）
     public vpVel = new CVector3();   // 機体速度（ワールド座標系）
     public vVel = new CVector3();    // 機体速度（機体座標系）
     public gVel = new CVector3();    // 機体加速度（ワールド座標系）
@@ -49,7 +56,10 @@ class Plane {
 
     public stickPos = new CVector3();   // 操縦系位置（x,y-スティック,z-ペダル）
     public stickVel = new CVector3();   // 操縦系変化率
-    public stickR: number; stickA: number;   // 操縦系の感度（R-センターへの減衰率,A-変化率）
+
+    public readonly stickR = 0.1;    // 操縦系の感度 (R-センターへの減衰率)
+    public readonly stickA = 0.05;    // 操縦系の感度（A-変化率）
+
     public power: number;               // エンジン推力比率（ミリタリー時で9）
     public throttle: number;            // スロットル位置（ミリタリー時で9）
     public boost: boolean;           // ブースト
@@ -121,9 +131,9 @@ class Plane {
     // 各変数を初期化する
 
     public posInit() {
-        this.pVel.x = (Math.random() - 0.5) * 1000 - 8000;
-        this.pVel.y = (Math.random() - 0.5) * 1000 - 1100;
-        this.pVel.z = 5000;
+        this.position.x = (Math.random() - 0.5) * 1000 - 8000;
+        this.position.y = (Math.random() - 0.5) * 1000 - 1100;
+        this.position.z = 5000;
         this.gHeight = 0;
         this.height = 5000;
         this.vpVel.x = 200.0;
@@ -137,7 +147,7 @@ class Plane {
         this.throttle = 5;
         this.heatWait = false;
         this.gunTemp = 0;
-        this.gcVel.set(this.pVel.x, this.pVel.y, this.pVel.z);
+        this.gcVel.set(this.position.x, this.position.y, this.position.z);
         this.target = -2;
         this.onGround = false;
         this.gunX = 0;
@@ -148,8 +158,7 @@ class Plane {
         this.aoa = 0;
         this.stickPos.set(0, 0, 0);
         this.stickVel.set(0, 0, 0);
-        this.stickR = 0.1;
-        this.stickA = 0.1;
+
 
         let wa = 45 * Math.PI / 180;
         let wa2 = 0 * Math.PI / 180;
@@ -297,7 +306,7 @@ class Plane {
             if (m !== this.no && world.plane[m].use) {
 
                 // 目標との距離を求める
-                a.setMinus(this.pVel, world.plane[m].pVel);
+                a.setMinus(this.position, world.plane[m].position);
                 let near_dis = a.abs2();
 
                 if (near_dis < 1e8) {
@@ -370,28 +379,29 @@ class Plane {
     // キー状態をもとに、スティックやトリガーをセット
     // 実際のキースキャンを処理しているのは、Applet3Dクラス
 
-    protected keyScan(_world: Jflight) {
+    protected keyScan(world: Jflight) {
         this.stickVel.set(0, 0, 0);
         this.boost = false;
         this.gunShoot = keyboard.pressed("space"); // world.keyShoot;
         this.aamShoot = keyboard.pressed("space"); // world.keyShoot;
 
-        if (/*world.keyBoost*/keyboard.pressed("b"))
+        if (keyboard.pressed("b")) {
             this.boost = true;
+        }
 
         // スティックを急激に動かすとまずいので、
         // スティック自身に慣性を持たせて滑らかに動かしている。
 
-        if (/*world.keyUp*/keyboard.pressed("up")) {
+        if (keyboard.pressed("up")) {
             this.stickVel.x = 1;
         }
-        if (/*world.keyDown*/keyboard.pressed("down")) {
+        if (keyboard.pressed("down")) {
             this.stickVel.x = -1;
         }
-        if (/*world.keyLeft*/keyboard.pressed("left")) {
+        if (keyboard.pressed("left")) {
             this.stickVel.y = -1;
         }
-        if (/*world.keyRight*/keyboard.pressed("right")) {
+        if (keyboard.pressed("right")) {
             this.stickVel.y = 1;
         }
 
@@ -401,6 +411,21 @@ class Plane {
         }
         if (this.stickPos.z < -1) {
             this.stickPos.z = -1;
+        }
+
+        // マウス処理
+        if (world.isMouseMove) {
+            let dx = this.stickPos.x - Jflight.mouseY;
+            let dy = this.stickPos.y + Jflight.mouseX;
+            this.stickVel.x = dx;
+            this.stickVel.y = dy;
+
+            // let length = this.stickVel.abs();
+            //if (length >= 1) {
+            //    this.stickVel.x /= length;
+            //    this.stickVel.y /= length;
+            //}
+            // world.isMouseMove = false;
         }
 
         this.stickPos.addCons(this.stickVel, this.stickA);
@@ -428,7 +453,7 @@ class Plane {
         if (this.gunTarget >= 0 && world.plane[this.gunTarget].use) {
 
             // 主目標の座標をスクリーン座標に変換
-            world.change3d(this, world.plane[this.gunTarget].pVel, dm);
+            world.change3d(this, world.plane[this.gunTarget].position, dm);
 
             // スクリーン内なら
             if (dm.x > 0 && dm.x < world.width && dm.y > 0 && dm.y < world.height) {
@@ -439,15 +464,15 @@ class Plane {
 
         // 自機の位置から、地面の高さを求め、高度を求める
 
-        this.gHeight = world.gHeight(this.pVel.x, this.pVel.y);
-        this.height = this.pVel.z - this.gHeight;
+        this.gHeight = world.gHeight(this.position.x, this.position.y);
+        this.height = this.position.z - this.gHeight;
 
         // 空気密度の計算
 
-        if (this.pVel.z < 5000) {
-            ve = 0.12492 - 0.000008 * this.pVel.z;
+        if (this.position.z < 5000) {
+            ve = 0.12492 - 0.000008 * this.position.z;
         } else {
-            ve = (0.12492 - 0.04) - 0.000002 * (this.pVel.z - 5000);
+            ve = (0.12492 - 0.04) - 0.000002 * (this.position.z - 5000);
         }
         if (ve < 0) {
             ve = 0;
@@ -554,7 +579,7 @@ class Plane {
 
         // 地面の傾き処理
 
-        world.gGrad(this.pVel.x, this.pVel.y, dm);
+        world.gGrad(this.position.x, this.position.y, dm);
         if (this.onGround) {
             this.gVel.x -= dm.x * 10;
             this.gVel.y -= dm.y * 10;
@@ -575,11 +600,11 @@ class Plane {
         // 機体の位置を積分して求める
 
         this.vpVel.addCons(this.gVel, Jflight.DT);
-        this.pVel.addCons(this.vpVel, Jflight.DT);
+        this.position.addCons(this.vpVel, Jflight.DT);
 
         // 念のため、地面にめり込んだかどうかチェック
         if (this.height < 2) {
-            this.pVel.z = this.gHeight + 2;
+            this.position.z = this.gHeight + 2;
             this.height = 2;
             this.vpVel.z *= -0.1;
         }
@@ -612,7 +637,7 @@ class Plane {
         let dm_a = new CVector3();
 
         // 目標と自機の位置関係を求め、機体座標に変換しておく
-        dm_p.setMinus(this.pVel, world.plane[this.target].pVel);
+        dm_p.setMinus(this.position, world.plane[this.target].position);
         this.change_w2l(dm_p, dm_a);
 
         // mmは、スティックの移動限界量
@@ -651,14 +676,18 @@ class Plane {
         this.stickPos.x += this.stickVel.x;
         this.stickPos.y += this.stickVel.y;
 
-        if (this.stickPos.x > 1)
+        if (this.stickPos.x > 1) {
             this.stickPos.x = 1;
-        if (this.stickPos.x < -1)
+        }
+        if (this.stickPos.x < -1) {
             this.stickPos.x = -1;
-        if (this.stickPos.y > 1)
+        }
+        if (this.stickPos.y > 1) {
             this.stickPos.y = 1;
-        if (this.stickPos.y < -1)
+        }
+        if (this.stickPos.y < -1) {
             this.stickPos.y = -1;
+        }
 
         // 機体高度が低いか、8秒以内に地面にぶつかりそうな場合、空に向ける
         if (this.height < 1000 || this.height + this.vpVel.z * 8 < 0) {
@@ -735,18 +764,18 @@ class Plane {
             this.gunTime = 1.0;
 
         // 弾丸の到着予想位置を求める
-        this.gcVel.x = this.pVel.x + ni.x + (oi.x - this.gVel.x * this.gunTime) * this.gunTime;
-        this.gcVel.y = this.pVel.y + ni.y + (oi.y - this.gVel.y * this.gunTime) * this.gunTime;
-        this.gcVel.z = this.pVel.z + ni.z + (oi.z + (-9.8 - this.gVel.z) * this.gunTime / 2) * this.gunTime;
+        this.gcVel.x = this.position.x + ni.x + (oi.x - this.gVel.x * this.gunTime) * this.gunTime;
+        this.gcVel.y = this.position.y + ni.y + (oi.y - this.gVel.y * this.gunTime) * this.gunTime;
+        this.gcVel.z = this.position.z + ni.z + (oi.z + (-9.8 - this.gVel.z) * this.gunTime / 2) * this.gunTime;
 
         world.change3d(this, this.gcVel, sc);
 
         // 機銃を目標へ向ける
         if (this.gunTarget >= 0) {
-            c.set(world.plane[this.gunTarget].pVel.x, world.plane[this.gunTarget].pVel.y, world.plane[this.gunTarget].pVel.z);
+            c.set(world.plane[this.gunTarget].position.x, world.plane[this.gunTarget].position.y, world.plane[this.gunTarget].position.z);
             c.addCons(world.plane[this.gunTarget].vpVel, this.gunTime);
             world.change3d(this, c, a);
-            world.change3d(this, world.plane[this.gunTarget].pVel, b);
+            world.change3d(this, world.plane[this.gunTarget].position, b);
             sc.x += b.x - a.x;
             sc.y += b.y - a.y;
         }
@@ -793,7 +822,7 @@ class Plane {
                 if (this.bullet[i].use === 0) {
                     this.bullet[i].vVel.setPlus(this.vpVel, oi);
                     aa = Math.random();
-                    this.bullet[i].pVel.setPlus(this.pVel, ni);
+                    this.bullet[i].pVel.setPlus(this.position, ni);
                     this.bullet[i].pVel.addCons(this.bullet[i].vVel, 0.1 * aa);
                     this.bullet[i].opVel.set(this.bullet[i].pVel.x, this.bullet[i].pVel.y, this.bullet[i].pVel.z);
                     this.bullet[i].bom = 0;
@@ -869,7 +898,7 @@ class Plane {
                 dm.y = 40;
                 this.change_l2w(dm, oi);
 
-                ap.pVel.setPlus(this.pVel, ni);
+                ap.pVel.setPlus(this.position, ni);
                 ap.vpVel.setPlus(this.vpVel, oi);
 
                 // 発射向きを決める

@@ -83,7 +83,7 @@ class Missile {
             let tp = world.plane[this.targetNo];
 
             // 追尾目標との距離を求める
-            this.m_a0.setMinus(tp.pVel, this.pVel);
+            this.m_a0.setMinus(tp.position, this.pVel);
             let l = this.m_a0.abs();
             if (l < 0.001) {
                 l = 0.001;
@@ -105,9 +105,9 @@ class Missile {
             }
 
             // 衝突予想時間時のターゲットの位置と自分の位置の差を求める
-            this.m_a0.x = tp.pVel.x + tp.vpVel.x * t0 - (this.pVel.x + this.vpVel.x * t0);
-            this.m_a0.y = tp.pVel.y + tp.vpVel.y * t0 - (this.pVel.y + this.vpVel.y * t0);
-            this.m_a0.z = tp.pVel.z + tp.vpVel.z * t0 - (this.pVel.z + this.vpVel.z * t0);
+            this.m_a0.x = tp.position.x + tp.vpVel.x * t0 - (this.pVel.x + this.vpVel.x * t0);
+            this.m_a0.y = tp.position.y + tp.vpVel.y * t0 - (this.pVel.y + this.vpVel.y * t0);
+            this.m_a0.z = tp.position.z + tp.vpVel.z * t0 - (this.pVel.z + this.vpVel.z * t0);
 
             let tr = ((100 - 15) - this.use) * 0.02 + 0.5;
             if (tr > 0.1) {
@@ -193,7 +193,7 @@ class Missile {
             let tp = world.plane[this.targetNo];
 
             // ターゲットとの距離を求めて、ある程度以下なら当たり（接触信管のみ使用）
-            this.m_a0.setMinus(this.pVel, tp.pVel);
+            this.m_a0.setMinus(this.pVel, tp.position);
             if (this.m_a0.abs() < 10) {
                 this.bom = 10;
 

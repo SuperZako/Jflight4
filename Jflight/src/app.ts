@@ -4,12 +4,6 @@
 ///<reference path="Jflight.ts" />
 ///<reference path="HUD.ts" />
 
-/*
-       Three.js "tutorials by example"
-       Author: Lee Stemkoski
-       Date: July 2013 (three.js v59dev)
- */
-
 // main
 
 // グローバル変数
@@ -30,9 +24,10 @@ namespace Main {
     var camera: THREE.PerspectiveCamera;
     var renderer: THREE.WebGLRenderer;
 
-    var hud: HUD;
+    var mouseX: number;
+    var mouseY: number;
+
     // var stats: Stats;
-    // var keyboard = new THREEx.KeyboardState();
     // var clock = new THREE.Clock();
     // custom global variables
     // var boomer: TextureAnimator; // animators
@@ -42,7 +37,7 @@ namespace Main {
     // functions
     export function init() {
         canvas = <HTMLCanvasElement>document.getElementById("canvas");
-
+        canvas.onmousemove = onMouseMove;
         // scene
         scene = new THREE.Scene();
 
@@ -132,8 +127,6 @@ namespace Main {
         // sceneに追加
         scene.add(axis);
 
-        hud = new HUD(scene);
-
         // MESHES WITH ANIMATED TEXTURES!
 
 
@@ -147,7 +140,31 @@ namespace Main {
 
         // var explosionMaterial = new THREE.MeshBasicMaterial({ map: explosionTexture });
 
-        flight = new Jflight(scene);
+        flight = new Jflight(scene, canvas);
+    }
+
+    function onMouseMove(ev: MouseEvent) {
+        var rect = canvas.getBoundingClientRect();//ev.target.getBoundingClientRect();
+        mouseX = ev.clientX - rect.left;
+        mouseY = ev.clientY - rect.top;
+
+        let centerX = canvas.width / 2;
+        let centerY = canvas.height / 2;
+
+        Jflight.mouseX = mouseX - centerX;
+        Jflight.mouseY = mouseY - centerY;
+
+        let radius = centerY * 0.8;
+        if (Math.sqrt(Jflight.mouseX ** 2 + Jflight.mouseY ** 2) > radius) {
+            let l = Math.sqrt(Jflight.mouseX ** 2 + Jflight.mouseY ** 2);
+            Jflight.mouseX /= l; // mouseX - centerX;
+            Jflight.mouseY /= l; // mouseY - centerY;
+            Jflight.mouseX *= radius;
+            Jflight.mouseY *= radius;
+        }
+        Jflight.mouseX /= radius;
+        Jflight.mouseY /= radius;
+        flight.isMouseMove = true;
     }
 
     export function animate() {
@@ -185,13 +202,10 @@ namespace Main {
         camera.setRotationFromMatrix(m);
         camera.position.set(flight.camerapos.x, flight.camerapos.y, flight.camerapos.z);
 
-        let z = flight.plane[0].aVel.z;
-        hud.rotationZ(-z);
-        hud.setPosition(flight.camerapos.x, flight.camerapos.y, flight.camerapos.z);
 
-        flight.plane[1].line.position.set(flight.plane[1].pVel.x, flight.plane[1].pVel.y, flight.plane[1].pVel.z);
-        flight.plane[2].line.position.set(flight.plane[2].pVel.x, flight.plane[2].pVel.y, flight.plane[2].pVel.z);
-        flight.plane[3].line.position.set(flight.plane[3].pVel.x, flight.plane[3].pVel.y, flight.plane[3].pVel.z);
+        flight.plane[1].line.position.set(flight.plane[1].position.x, flight.plane[1].position.y, flight.plane[1].position.z);
+        flight.plane[2].line.position.set(flight.plane[2].position.x, flight.plane[2].position.y, flight.plane[2].position.z);
+        flight.plane[3].line.position.set(flight.plane[3].position.x, flight.plane[3].position.y, flight.plane[3].position.z);
 
 
         canvas.width = window.innerWidth;
@@ -203,7 +217,9 @@ namespace Main {
     function render() {
         renderer.render(scene, camera);
         let context = canvas.getContext("2d");
-        flight.render(context);
+        if (context) {
+            flight.render(context);
+        }
     }
 }
 

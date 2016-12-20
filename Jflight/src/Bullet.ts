@@ -77,10 +77,10 @@ class Bullet {
             // 点と直線の方程式で再接近距離を求めても良いが、面倒だったので手抜き 。
 
             // 現在の弾丸の位置と目標との差ベクトルを求める
-            this.m_a.setMinus(this.pVel, world.plane[plane.gunTarget].pVel);
+            this.m_a.setMinus(this.pVel, world.plane[plane.gunTarget].position);
 
             // 一つ前の弾丸の位置と目標との差ベクトルを求める
-            this.m_b.setMinus(this.opVel, world.plane[plane.gunTarget].pVel);
+            this.m_b.setMinus(this.opVel, world.plane[plane.gunTarget].position);
 
             // 一つ前の弾丸の位置と現在の弾丸の位置との差ベクトルを求める
             this.m_vv.setCons(this.vVel, Jflight.DT);

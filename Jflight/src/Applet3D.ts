@@ -45,10 +45,10 @@ class Applet3D {
 
     // バックバッファのクリア
 
-    public clear(context: CanvasRenderingContext2D | null) {
-        if (context) {
-            context.clearRect(0, 0, this.width, this.height);
-        }
+    public clear(context: CanvasRenderingContext2D) {
+
+        context.clearRect(0, 0, this.width, this.height);
+
     }
 
     // ３Ｄ（sp）→２Ｄ（cp）変換
@@ -82,8 +82,8 @@ class Applet3D {
 
     // 地面と機体表示用のライン表示
 
-    public drawSline(context: CanvasRenderingContext2D | null, p0: CVector3, p1: CVector3) {
-        if (context !== null && p0.x > -10000 && p0.x < 30000 && p0.y > -10000 && p0.y < 30000 &&
+    public drawSline(context: CanvasRenderingContext2D, p0: CVector3, p1: CVector3) {
+        if (p0.x > -10000 && p0.x < 30000 && p0.y > -10000 && p0.y < 30000 &&
             p1.x > -10000 && p1.x < 30000 && p1.y > -10000 && p1.y < 30000) {
             context.strokeStyle = "white";
             context.beginPath();
@@ -95,8 +95,8 @@ class Applet3D {
 
     // 弾丸表示用のライン表示
 
-    public drawBlined(context: CanvasRenderingContext2D | null, p0: CVector3, p1: CVector3) {
-        if (context && p0.x > -1000 && p1.x > -1000) {
+    public drawBlined(context: CanvasRenderingContext2D, p0: CVector3, p1: CVector3) {
+        if (p0.x > -1000 && p1.x > -1000) {
             // bGraphics.setColor(Color.yellow);
             context.strokeStyle = "yellow";
             // bGraphics.drawLine((int)p0.x, (int)p0.y, (int)p1.x, (int)p1.y);
@@ -109,8 +109,8 @@ class Applet3D {
 
     // 弾丸表示用の太いライン表示
 
-    public drawBline(context: CanvasRenderingContext2D | null, p0: CVector3, p1: CVector3) {
-        if (context && p0.x > -1000 && p1.x > -1000) {
+    public drawBline(context: CanvasRenderingContext2D, p0: CVector3, p1: CVector3) {
+        if (p0.x > -1000 && p1.x > -1000) {
             //bGraphics.setColor(Color.yellow);
             context.strokeStyle = "yellow";
 
@@ -128,8 +128,8 @@ class Applet3D {
 
     // ミサイル煙用のライン表示
 
-    public drawMline(context: CanvasRenderingContext2D | null, p0: CVector3, p1: CVector3) {
-        if (context && p0.x > -1000 && p1.x > -1000) {
+    public drawMline(context: CanvasRenderingContext2D, p0: CVector3, p1: CVector3) {
+        if (p0.x > -1000 && p1.x > -1000) {
             // bGraphics.setColor(Color.lightGray);
             context.strokeStyle = "lightgrey";
 
@@ -155,7 +155,7 @@ class Applet3D {
 
     // ポリゴン表示
 
-    public drawPoly(context: CanvasRenderingContext2D | null, p0: CVector3, p1: CVector3, p2: CVector3) {
+    public drawPoly(context: CanvasRenderingContext2D, p0: CVector3, p1: CVector3, p2: CVector3) {
         this.drawSline(context, p0, p1);
         this.drawSline(context, p1, p2);
         this.drawSline(context, p2, p0);
@@ -176,35 +176,32 @@ class Applet3D {
         }
     }
 
-    public fillText(context: CanvasRenderingContext2D | null, text: string, x: number, y: number) {
-        if (context) {
-            context.font = "18px 'ＭＳ Ｐゴシック'";
-            context.fillStyle = "white";
-            context.fillText(text, x, y);
-        }
+    public fillText(context: CanvasRenderingContext2D, text: string, x: number, y: number) {
+
+        context.font = "18px 'ＭＳ Ｐゴシック'";
+        context.fillStyle = "white";
+        context.fillText(text, x, y);
+
     }
 
-    public drawLine(context: CanvasRenderingContext2D | null, strokeStyle: string, x1: number, y1: number, x2: number, y2: number) {
-        if (context) {
-            context.strokeStyle = strokeStyle;
-            //描画することを宣言する
-            context.beginPath();
-            //描き始め（始点）を決定する
-            context.moveTo(x1, y1);
-            //始点から指定の座標まで線を引く
-            context.lineTo(x2, y2);
-            //引き続き線を引いていく
-            //context.lineTo(0, 100);
-            //context.lineTo(51, 15);
-            //描画を終了する
-            context.closePath();
+    public drawLine(context: CanvasRenderingContext2D, strokeStyle: string, x1: number, y1: number, x2: number, y2: number) {
 
-            //上記記述は定義情報である。この命令で線を描く。
-            context.stroke();
+        context.strokeStyle = strokeStyle;
+        //描画することを宣言する
+        context.beginPath();
+        //描き始め（始点）を決定する
+        context.moveTo(x1, y1);
+        //始点から指定の座標まで線を引く
+        context.lineTo(x2, y2);
+        //引き続き線を引いていく
+        //context.lineTo(0, 100);
+        //context.lineTo(51, 15);
+        //描画を終了する
+        context.closePath();
 
+        //上記記述は定義情報である。この命令で線を描く。
+        context.stroke();
 
-
-        }
     }
 }
 

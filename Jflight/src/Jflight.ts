@@ -55,9 +55,17 @@ class Jflight extends Applet3D {
 
     protected pos: CVector3[][] = [];                   // 地面表示の際のデータを蓄えておくためのTmp
 
+    private hud: HUD;
+
+
+    static mouseX: number;
+    static mouseY: number;
+
+    isMouseMove = false;
+
     // アプレットの構築
 
-    public constructor(scene: THREE.Scene) {
+    public constructor(scene: THREE.Scene, private hudCanvas: HTMLCanvasElement) {
         super();
 
         // 機体形状の初期化
@@ -76,7 +84,7 @@ class Jflight extends Applet3D {
             }
         }
 
-
+        this.hud = new HUD(hudCanvas, this.plane[0]);
 
         // 各機体の設定
         this.plane[0].no = 0;
@@ -215,12 +223,12 @@ class Jflight extends Applet3D {
 
     // 画面表示
 
-    public draw(context: CanvasRenderingContext2D | null) {
+    public draw(context: CanvasRenderingContext2D) {
 
-        let width = this.width;
-        let height = this.height;
-        let centerX = width / 2;
-        let centerY = height / 2;
+        // let width = this.width;
+        // let height = this.height;
+        // let centerX = width / 2;
+        // let centerY = height / 2;
 
         // バックバッファクリア
         this.clear(context);
@@ -234,31 +242,7 @@ class Jflight extends Applet3D {
         // 機体表示
         // this.writePlane(context);
 
-        this.drawLine(context, "rgb(255, 255, 255)", centerX, height / 2 - 15, centerX, centerY + 15);
-        this.drawLine(context, "rgb(255, 255, 255)", centerX - 15, centerY, centerX + 15, centerY);
-
-
-        let y = this.plane[0].aVel.y;
-        if (context) {
-            context.save();
-            // Move registration point to the center of the canvas
-            context.translate(width / 2, height / 2);
-
-            // Rotate 1 degree
-            context.rotate(-y);
-
-            // Move registration point back to the top left corner of canvas
-            context.translate(-width / 2, -height / 2);
-
-
-            let x = -this.plane[0].aVel.x;
-            for (let i = -170; i <= 180; i += 10) {
-                // let x = -this.plane[0].aVel.x + (i * Math.PI / 180);
-                // let distance = 300;
-                this.drawLine(context, "rgb(255, 255, 255)", centerX - 150, centerY + i * 20 + Math.tan(x) * centerY, centerX + 150, centerY + i * 20 + Math.tan(x) * centerY);
-            }
-            context.restore();
-        }
+        this.hud.render(this.hudCanvas);
     }
 
     // メインループ
@@ -276,15 +260,15 @@ class Jflight extends Applet3D {
         }
     }
 
-    public render(context: CanvasRenderingContext2D | null) {
+    public render(context: CanvasRenderingContext2D) {
         // カメラ位置を自機にセットして表示
-        this.camerapos.set(this.plane[0].pVel.x, this.plane[0].pVel.y, this.plane[0].pVel.z);
+        this.camerapos.set(this.plane[0].position.x, this.plane[0].position.y, this.plane[0].position.z);
         this.draw(context);
     }
     // 各機体を表示
     // 弾丸やミサイルもここで表示している
 
-    writePlane(context: CanvasRenderingContext2D | null) {
+    writePlane(context: CanvasRenderingContext2D) {
         //let p0 = new CVector3();
         //let p1 = new CVector3();
         //let p2 = new CVector3();
@@ -323,9 +307,9 @@ class Jflight extends Applet3D {
                         let p2 = Jflight.obj[j][2].clone();
                         p2.applyMatrix4(m);
 
-                        p0.add(<any>this.plane[i].pVel);
-                        p1.add(<any>this.plane[i].pVel);
-                        p2.add(<any>this.plane[i].pVel);
+                        p0.add(<any>this.plane[i].position);
+                        p1.add(<any>this.plane[i].position);
+                        p2.add(<any>this.plane[i].position);
 
                         // ワールド座標を、スクリーン座標に変換
                         this.change3d(this.plane[0], <any>p0, s0);
@@ -342,7 +326,7 @@ class Jflight extends Applet3D {
 
     // 機銃を表示
 
-    protected writeGun(context: CanvasRenderingContext2D | null, aplane: Plane) {
+    protected writeGun(context: CanvasRenderingContext2D, aplane: Plane) {
         let dm = new CVector3();
         let dm2 = new CVector3();
         let cp = new CVector3();
@@ -390,7 +374,7 @@ class Jflight extends Applet3D {
 
     // ミサイルとその煙を表示
 
-    protected writeAam(context: CanvasRenderingContext2D | null, aplane: Plane) {
+    protected writeAam(context: CanvasRenderingContext2D, aplane: Plane) {
         let dm = new CVector3();
         let cp = new CVector3();
         for (let j = 0; j < Plane.MMMAX; j++) {
@@ -431,7 +415,7 @@ class Jflight extends Applet3D {
 
     // 地面を表示
 
-    writeGround(context: CanvasRenderingContext2D | null) {
+    writeGround(context: CanvasRenderingContext2D) {
 
         let mx, my;
         let i: number, j: number;
@@ -443,8 +427,8 @@ class Jflight extends Applet3D {
 
         // 自機のグリッド位置とオフセットを計算
 
-        let dx = (this.plane[0].pVel.x / step);
-        let dy = (this.plane[0].pVel.y / step);
+        let dx = (this.plane[0].position.x / step);
+        let dy = (this.plane[0].position.y / step);
         let sx = dx * step;
         let sy = dy * step;
 
