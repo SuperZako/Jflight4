@@ -1,15 +1,15 @@
-///<reference path="CVector3.ts" />
+///<reference path="./Math/CVector3.ts" />
 
 //
 // Bullet
 // 弾丸クラス
 //
 
-class Bullet {
+class Bullet extends PhysicsState {
 
     // 変数
 
-    public pVel = new CVector3();         // 位置
+    // public pVel = new CVector3();         // 位置
     public opVel = new CVector3();        // １ステップ前の位置
     public vVel = new CVector3();         // 速度
     public use = 0;               // 使用状態（0で未使用）
@@ -25,6 +25,7 @@ class Bullet {
     // コンストラクタ
 
     public constructor(scene: THREE.Scene) {
+        super();
         var geometry = new THREE.SphereGeometry(5, 8, 8);
         var material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
         this.sphere = new THREE.Mesh(geometry, material);
@@ -41,17 +42,17 @@ class Bullet {
         this.vVel.z += Jflight.G * Jflight.DT;
 
         // 一つ前の位置を保存
-        this.opVel.set(this.pVel.x, this.pVel.y, this.pVel.z);
+        this.opVel.set(this.position.x, this.position.y, this.position.z);
 
         // 移動
-        this.pVel.addCons(this.vVel, Jflight.DT);
+        this.position.addCons(this.vVel, Jflight.DT);
         this.use--;
 
         // 弾丸を移動させる
         if (this.use > 0) {
-            this.sphere.position.x = this.pVel.x;
-            this.sphere.position.y = this.pVel.y;
-            this.sphere.position.z = this.pVel.z;
+            this.sphere.position.x = this.position.x;
+            this.sphere.position.y = this.position.y;
+            this.sphere.position.z = this.position.z;
             this.sphere.visible = true;
         } else {
             this.sphere.visible = false;
@@ -77,7 +78,7 @@ class Bullet {
             // 点と直線の方程式で再接近距離を求めても良いが、面倒だったので手抜き 。
 
             // 現在の弾丸の位置と目標との差ベクトルを求める
-            this.m_a.setMinus(this.pVel, world.plane[plane.gunTarget].position);
+            this.m_a.setMinus(this.position, world.plane[plane.gunTarget].position);
 
             // 一つ前の弾丸の位置と目標との差ベクトルを求める
             this.m_b.setMinus(this.opVel, world.plane[plane.gunTarget].position);
@@ -106,11 +107,11 @@ class Bullet {
 
         // 地面との当たり判定
 
-        let gh = world.gHeight(this.pVel.x, this.pVel.y);
-        if (this.pVel.z < gh) {
+        let gh = world.gHeight(this.position.x, this.position.y);
+        if (this.position.z < gh) {
             // 地面以下なら、乱反射させる
             this.vVel.z = Math.abs(this.vVel.z);
-            this.pVel.z = gh;
+            this.position.z = gh;
             this.vVel.x += (Math.random() - 0.5) * 50;
             this.vVel.y += (Math.random() - 0.5) * 50;
             this.vVel.x *= 0.5;

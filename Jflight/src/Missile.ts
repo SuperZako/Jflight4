@@ -5,16 +5,17 @@
 // ミサイルクラス
 //
 
-class Missile {
+class Missile extends PhysicsState {
 
     // 定数
     public static MOMAX = 50;           // 煙の長さの最大値
 
     // 変数
-    public pVel: CVector3;              // 位置
+    // public pVel = new CVector3();       // 位置
+    
     public opVel: CVector3[] = [];      // 昔の位置（煙の位置）
-    public vpVel: CVector3;             // 速度
-    public aVel: CVector3;              // 向き（単位ベクトル）
+    public vpVel = new CVector3();      // 速度
+    public aVel = new CVector3();       // 向き（単位ベクトル）
     public use = 0;                     // 使用状態（0で未使用）
     public bom = 0;                     // 爆発状態（0で未爆）
     public bomm = 0;                    // 破裂状態（0で未爆）
@@ -28,11 +29,7 @@ class Missile {
     protected m_a0: CVector3;
 
     public constructor(scene: THREE.Scene) {
-        this.pVel = new CVector3();
-        this.vpVel = new CVector3();
-        this.aVel = new CVector3();
-
-
+        super();
         for (let i = 0; i < Missile.MOMAX; i++) {
             this.opVel.push(new CVector3());
         }
@@ -83,7 +80,7 @@ class Missile {
             let tp = world.plane[this.targetNo];
 
             // 追尾目標との距離を求める
-            this.m_a0.setMinus(tp.position, this.pVel);
+            this.m_a0.setMinus(tp.position, this.position);
             let l = this.m_a0.abs();
             if (l < 0.001) {
                 l = 0.001;
@@ -105,9 +102,9 @@ class Missile {
             }
 
             // 衝突予想時間時のターゲットの位置と自分の位置の差を求める
-            this.m_a0.x = tp.position.x + tp.vpVel.x * t0 - (this.pVel.x + this.vpVel.x * t0);
-            this.m_a0.y = tp.position.y + tp.vpVel.y * t0 - (this.pVel.y + this.vpVel.y * t0);
-            this.m_a0.z = tp.position.z + tp.vpVel.z * t0 - (this.pVel.z + this.vpVel.z * t0);
+            this.m_a0.x = tp.position.x + tp.vpVel.x * t0 - (this.position.x + this.vpVel.x * t0);
+            this.m_a0.y = tp.position.y + tp.vpVel.y * t0 - (this.position.y + this.vpVel.y * t0);
+            this.m_a0.z = tp.position.z + tp.vpVel.z * t0 - (this.position.z + this.vpVel.z * t0);
 
             let tr = ((100 - 15) - this.use) * 0.02 + 0.5;
             if (tr > 0.1) {
@@ -178,10 +175,10 @@ class Missile {
         this.calcMotor(world, plane);
 
         // リングバッファに位置を保存
-        this.opVel[this.use % Missile.MOMAX].set(this.pVel.x, this.pVel.y, this.pVel.z);
+        this.opVel[this.use % Missile.MOMAX].set(this.position.x, this.position.y, this.position.z);
 
         // ミサイル移動
-        this.pVel.addCons(this.vpVel, Jflight.DT);
+        this.position.addCons(this.vpVel, Jflight.DT);
         this.use--;
 
         // ターゲットとの当たり判定
@@ -193,7 +190,7 @@ class Missile {
             let tp = world.plane[this.targetNo];
 
             // ターゲットとの距離を求めて、ある程度以下なら当たり（接触信管のみ使用）
-            this.m_a0.setMinus(this.pVel, tp.position);
+            this.m_a0.setMinus(this.position, tp.position);
             if (this.m_a0.abs() < 10) {
                 this.bom = 10;
 
@@ -237,9 +234,9 @@ class Missile {
         // ミサイルが爆発中の場合、爆円表示
         this.explosion.visible = false;
         if (this.bom > 0) {
-            this.explosion.position.x = this.pVel.x;
-            this.explosion.position.y = this.pVel.y;
-            this.explosion.position.z = this.pVel.z;
+            this.explosion.position.x = this.position.x;
+            this.explosion.position.y = this.position.y;
+            this.explosion.position.z = this.position.z;
             this.explosion.visible = true;
 
             // this.change3d(this.plane[0], ap.pVel, cp);
@@ -253,10 +250,10 @@ class Missile {
 
         // 地面との当たり判定
 
-        let gh = world.gHeight(this.pVel.x, this.pVel.y);
-        if (this.pVel.z < gh) {
+        let gh = world.gHeight(this.position.x, this.position.y);
+        if (this.position.z < gh) {
             this.bom = 10;
-            this.pVel.z = gh + 3;
+            this.position.z = gh + 3;
         }
 
         // リングバッファ長（煙の長さ）を設定

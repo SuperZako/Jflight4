@@ -5,7 +5,7 @@
 // 翼についたエンジンも表す
 //
 
-class Wing {
+class Wing extends PhysicsState {
 
     //        座標系
     //     Z
@@ -15,7 +15,7 @@ class Wing {
     //     -------->X
 
     // 変数
-    public pVel: CVector3;    // 翼中心位置（機体座標）
+    // public pVel: CVector3;    // 翼中心位置（機体座標）
     public xVel: CVector3;    // 翼座標Ｘ単位ベクトル（機体座標）
     public yVel: CVector3;    // 翼座標Ｙ単位ベクトル（機体座標）
     public zVel: CVector3;    // 翼座標Ｚ単位ベクトル（機体座標）
@@ -35,7 +35,8 @@ class Wing {
     // コンストラクタ
 
     public constructor() {
-        this.pVel = new CVector3();
+        super();
+        // this.pVel = new CVector3();
         this.xVel = new CVector3();
         this.yVel = new CVector3();
         this.zVel = new CVector3();
@@ -61,13 +62,12 @@ class Wing {
     // veは空気密度、noは翼No.（迎角計算に使用）、boostはエンジンブースト
 
     public calc(plane: Plane, ve: number, no: number, boost: boolean) {
-        let  vv, t0, n, at, sin, cos, rr, cl, cd, ff, dx, dy, dz;
+        let vv, t0, n, at, sin, cos, rr, cl, cd, ff, dx, dy, dz;
 
         // 機体の速度と回転率、翼の位置から翼における速度を求める（外積計算）
-
-        this.m_vp.x = plane.vVel.x + this.pVel.y * plane.vaVel.z - this.pVel.z * plane.vaVel.y;
-        this.m_vp.y = plane.vVel.y + this.pVel.z * plane.vaVel.x - this.pVel.x * plane.vaVel.z;
-        this.m_vp.z = plane.vVel.z + this.pVel.x * plane.vaVel.y - this.pVel.y * plane.vaVel.x;
+        this.m_vp.x = plane.vVel.x + this.position.y * plane.vaVel.z - this.position.z * plane.vaVel.y;
+        this.m_vp.y = plane.vVel.y + this.position.z * plane.vaVel.x - this.position.x * plane.vaVel.z;
+        this.m_vp.z = plane.vVel.z + this.position.x * plane.vaVel.y - this.position.y * plane.vaVel.x;
 
         // 翼のひねりを基に、基本座標ベクトルを回転
 

@@ -66,7 +66,7 @@ class HUD {
 
             this.drawCircle(context, "rgb(255, 255, 255)", centerX + Jflight.mouseX, centerY + Jflight.mouseY, 10);
 
-            let y = this.plane.aVel.y;
+            let y = this.plane.rotation.y;
 
             context.save();
             // Move registration point to the center of the canvas
@@ -79,7 +79,7 @@ class HUD {
             context.translate(-width / 2, -height / 2);
 
 
-            let x = -this.plane.aVel.x;
+            let x = -this.plane.rotation.x;
             for (let i = -170; i <= 180; i += 10) {
                 // let x = -this.plane[0].aVel.x + (i * Math.PI / 180);
                 // let distance = 300;

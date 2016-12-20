@@ -1,4 +1,5 @@
-///<reference path="CVector3.ts" />
+///<reference path="./Math/CVector3.ts" />
+///<reference path="./Physics/PhysicsState.ts" />
 ///<reference path="Wing.ts" />
 ///<reference path="Bullet.ts" />
 ///<reference path="Missile.ts" />
@@ -10,7 +11,7 @@
 // 各弾丸やミサイルを動かしているのもこのクラス
 //
 
-class Plane {
+class Plane extends PhysicsState {
 
     // 定数
 
@@ -38,11 +39,13 @@ class Plane {
     public use: boolean;             // この機体を使用するか
     public no: number;                  // 機体No.
     public wings: Wing[] = [];       // 各翼(0,1-主翼,2-水平尾翼,3-垂直尾翼,4,5-エンジン)
-    public position = new CVector3();    // 機体位置（ワールド座標系）
+
+    // public position = new CVector3();    // 機体位置（ワールド座標系）
+
     public vpVel = new CVector3();   // 機体速度（ワールド座標系）
     public vVel = new CVector3();    // 機体速度（機体座標系）
     public gVel = new CVector3();    // 機体加速度（ワールド座標系）
-    public aVel = new THREE.Euler();    // 機体向き（オイラー角）
+    // public aVel = new THREE.Euler();    // 機体向き（オイラー角）
     public vaVel = new CVector3();   // 機体回転速度（オイラー角）
     public gcVel = new CVector3();   // 弾丸の将来予想位置
     public height: number;           // 機体の高度
@@ -65,7 +68,8 @@ class Plane {
     public boost: boolean;           // ブースト
     public gunShoot: boolean;        // 機銃トリガー
     public aamShoot: boolean;        // ミサイルトリガー
-    public level: number; target: number;       // 自動操縦時のレベルと目標
+    public level: number;
+    public target: number;       // 自動操縦時のレベルと目標
 
     // 機銃系
 
@@ -93,7 +97,7 @@ class Plane {
 
     // コンストラクタ
     public constructor(scene: THREE.Scene) {
-
+        super();
         for (let i = 0; i < Plane.BMAX; i++) {
             this.bullet.push(new Bullet(scene));
         }
@@ -137,7 +141,7 @@ class Plane {
         this.gHeight = 0;
         this.height = 5000;
         this.vpVel.x = 200.0;
-        this.aVel.set(0, 0, Math.PI / 2);
+        this.rotation.set(0, 0, Math.PI / 2);
         this.vpVel.y = 0.0;
         this.vpVel.z = 0.0;
         this.gVel.set(0, 0, 0);
@@ -166,37 +170,37 @@ class Plane {
         // 各翼の位置と向きをセット
 
         //  右翼???
-        this.wings[0].pVel.set(3, 0.1, 0);
+        this.wings[0].position.set(3, 0.1, 0);
         this.wings[0].xVel.set(Math.cos(wa), -Math.sin(wa), Math.sin(wa2));
         this.wings[0].yVel.set(Math.sin(wa), Math.cos(wa), 0);
         this.wings[0].zVel.set(0, 0, 1);
 
         // 　左翼???
-        this.wings[1].pVel.set(-3, 0.1, 0);
+        this.wings[1].position.set(-3, 0.1, 0);
         this.wings[1].xVel.set(Math.cos(wa), Math.sin(wa), -Math.sin(wa2));
         this.wings[1].yVel.set(-Math.sin(wa), Math.cos(wa), 0);
         this.wings[1].zVel.set(0, 0, 1);
 
         // 水平尾翼
-        this.wings[2].pVel.set(0, -10, 2);
+        this.wings[2].position.set(0, -10, 2);
         this.wings[2].xVel.set(1, 0, 0);
         this.wings[2].yVel.set(0, 1, 0);
         this.wings[2].zVel.set(0, 0, 1);
 
         // 垂直尾翼
-        this.wings[3].pVel.set(0, -10, 0);
+        this.wings[3].position.set(0, -10, 0);
         this.wings[3].xVel.set(0, 0, 1);
         this.wings[3].yVel.set(0, 1, 0);
         this.wings[3].zVel.set(1, 0, 0);
 
         // 右エンジン
-        this.wings[4].pVel.set(5, 0, 0);
+        this.wings[4].position.set(5, 0, 0);
         this.wings[4].xVel.set(1, 0, 0);
         this.wings[4].yVel.set(0, 1, 0);
         this.wings[4].zVel.set(0, 0, 1);
 
         // 左エンジン
-        this.wings[5].pVel.set(-5, 0, 0);
+        this.wings[5].position.set(-5, 0, 0);
         this.wings[5].xVel.set(1, 0, 0);
         this.wings[5].yVel.set(0, 1, 0);
         this.wings[5].zVel.set(0, 0, 1);
@@ -238,9 +242,9 @@ class Plane {
             wing.aAngle = 0;
             wing.bAngle = 0;
             wing.vVel.set(0, 0, 1);
-            this.iMass.x += wing.mass * (Math.abs(wing.pVel.x) + 1) * m_i * m_i;
-            this.iMass.y += wing.mass * (Math.abs(wing.pVel.y) + 1) * m_i * m_i;
-            this.iMass.z += wing.mass * (Math.abs(wing.pVel.z) + 1) * m_i * m_i;
+            this.iMass.x += wing.mass * (Math.abs(wing.position.x) + 1) * m_i * m_i;
+            this.iMass.y += wing.mass * (Math.abs(wing.position.y) + 1) * m_i * m_i;
+            this.iMass.z += wing.mass * (Math.abs(wing.position.z) + 1) * m_i * m_i;
         }
     }
 
@@ -248,9 +252,9 @@ class Plane {
 
     public checkTrans() {
 
-        let x = this.aVel.x;
-        let y = this.aVel.y;
-        let z = this.aVel.z;
+        let x = this.rotation.x;
+        let y = this.rotation.y;
+        let z = this.rotation.z;
         this.sina = Math.sin(x); this.cosa = Math.cos(x);
         if (this.cosa < 1e-9 && this.cosa > 0) {
             this.cosa = 1e-9;
@@ -263,7 +267,7 @@ class Plane {
 
 
         // ピッチ（機首の上下）→ロール（左右の傾き）→ヨー(地面垂直方向)
-        let a = new THREE.Euler(this.aVel.x, -this.aVel.y, this.aVel.z, "YXZ");
+        let a = new THREE.Euler(x, -y, z, "YXZ");
 
         this.matrix.makeRotationFromEuler(a);
     }
@@ -528,7 +532,7 @@ class Plane {
             // am.z -= (wing.pVel.x * wing.fVel.y - wing.pVel.y * wing.fVel.x);
             // v = position × velocity
             // am -= v;
-            v.crossVectors(<any>wing.pVel, <any>wing.fVel);
+            v.crossVectors(<any>wing.position, <any>wing.fVel);
             am.sub(<any>v);
         }
 
@@ -538,33 +542,33 @@ class Plane {
         this.vaVel.y += am.y / this.iMass.y * Jflight.DT;
         this.vaVel.z += am.z / this.iMass.z * Jflight.DT;
 
-        this.aVel.x += (this.vaVel.x * this.cosb + this.vaVel.z * this.sinb) * Jflight.DT;
-        this.aVel.y += (this.vaVel.y + (this.vaVel.x * this.sinb - this.vaVel.z * this.cosb) * this.sina / this.cosa) * Jflight.DT;
-        this.aVel.z += (-this.vaVel.x * this.sinb + this.vaVel.z * this.cosb) / this.cosa * Jflight.DT;
+        this.rotation.x += (this.vaVel.x * this.cosb + this.vaVel.z * this.sinb) * Jflight.DT;
+        this.rotation.y += (this.vaVel.y + (this.vaVel.x * this.sinb - this.vaVel.z * this.cosb) * this.sina / this.cosa) * Jflight.DT;
+        this.rotation.z += (-this.vaVel.x * this.sinb + this.vaVel.z * this.cosb) / this.cosa * Jflight.DT;
 
         // 機体の角度を一定範囲に丸めておく
-        for (let q = 0; q < 3 && this.aVel.x >= Math.PI / 2; q++) {
-            this.aVel.x = Math.PI - this.aVel.x;
-            this.aVel.y += Math.PI;
-            this.aVel.z += Math.PI;
+        for (let q = 0; q < 3 && this.rotation.x >= Math.PI / 2; q++) {
+            this.rotation.x = Math.PI - this.rotation.x;
+            this.rotation.y += Math.PI;
+            this.rotation.z += Math.PI;
         }
-        for (let q = 0; q < 3 && this.aVel.x < -Math.PI / 2; q++) {
-            this.aVel.x = -Math.PI - this.aVel.x;
-            this.aVel.y += Math.PI;
-            this.aVel.z += Math.PI;
+        for (let q = 0; q < 3 && this.rotation.x < -Math.PI / 2; q++) {
+            this.rotation.x = -Math.PI - this.rotation.x;
+            this.rotation.y += Math.PI;
+            this.rotation.z += Math.PI;
         }
 
-        for (let q = 0; q < 3 && this.aVel.y >= Math.PI; q++) {
-            this.aVel.y -= Math.PI * 2;
+        for (let q: number = 0; q < 3 && this.rotation.y >= Math.PI; q++) {
+            this.rotation.y -= Math.PI * 2;
         }
-        for (let q = 0; q < 3 && this.aVel.y < -Math.PI; q++) {
-            this.aVel.y += Math.PI * 2;
+        for (let q = 0; q < 3 && this.rotation.y < -Math.PI; q++) {
+            this.rotation.y += Math.PI * 2;
         }
-        for (let q = 0; q < 3 && this.aVel.z >= Math.PI * 2; q++) {
-            this.aVel.z -= Math.PI * 2;
+        for (let q = 0; q < 3 && this.rotation.z >= Math.PI * 2; q++) {
+            this.rotation.z -= Math.PI * 2;
         }
-        for (let q = 0; q < 3 && this.aVel.z < 0; q++) {
-            this.aVel.z += Math.PI * 2;
+        for (let q = 0; q < 3 && this.rotation.z < 0; q++) {
+            this.rotation.z += Math.PI * 2;
         }
 
         // 加速度を決定
@@ -610,7 +614,7 @@ class Plane {
         }
 
         // 地面にある程度以上の速度か、無理な体勢で接触した場合、機体を初期化
-        if (this.height < 5 && (Math.abs(this.vpVel.z) > 50 || Math.abs(this.aVel.y) > 20 * Math.PI / 180 || this.aVel.x > 10 * Math.PI / 180)) {
+        if (this.height < 5 && (Math.abs(this.vpVel.z) > 50 || Math.abs(this.rotation.y) > 20 * Math.PI / 180 || this.rotation.x > 10 * Math.PI / 180)) {
             this.posInit();
         }
     }
@@ -661,16 +665,19 @@ class Plane {
         }
 
         // 目標が上方に見える場合、スティックを引く
-        if (dm_a.z < 0)
+        if (dm_a.z < 0) {
             this.stickVel.x = dm_a.z / m * mm;
+        }
 
         // 目標の左右見かけ位置に合わせて、スティックを左右に動かす
         this.stickVel.y = -dm_a.x / m * mm * 0.4;
 
-        if (this.stickVel.y > 1)
+        if (this.stickVel.y > 1) {
             this.stickVel.y = 1;
-        if (this.stickVel.y < -1)
+        }
+        if (this.stickVel.y < -1) {
             this.stickVel.y = -1;
+        }
 
         // スティックの慣性処理
         this.stickPos.x += this.stickVel.x;
@@ -691,8 +698,8 @@ class Plane {
 
         // 機体高度が低いか、8秒以内に地面にぶつかりそうな場合、空に向ける
         if (this.height < 1000 || this.height + this.vpVel.z * 8 < 0) {
-            this.stickPos.y = -this.aVel.y;
-            if (Math.abs(this.aVel.y) < Math.PI / 2) {
+            this.stickPos.y = -this.rotation.y;
+            if (Math.abs(this.rotation.y) < Math.PI / 2) {
                 this.stickPos.x = -1;
             } else {
                 this.stickPos.x = 0;
@@ -736,7 +743,6 @@ class Plane {
     // 機銃の弾丸移動と発射処理
 
     public moveBullet(world: Jflight) {
-        let i;
         let aa;
 
         let sc = new CVector3();
@@ -812,19 +818,21 @@ class Plane {
 
         // 弾丸移動
 
-        for (i = 0; i < Plane.BMAX; i++)
-            if (this.bullet[i].use != 0)
+        for (let i = 0; i < Plane.BMAX; i++) {
+            if (this.bullet[i].use !== 0) {
                 this.bullet[i].move(world, this);
+            }
+        }
 
         // 弾丸発射処理
         if (this.gunShoot && this.gunTemp++ < Plane.MAXT) {
-            for (i = 0; i < Plane.BMAX; i++) {
+            for (let i = 0; i < Plane.BMAX; i++) {
                 if (this.bullet[i].use === 0) {
                     this.bullet[i].vVel.setPlus(this.vpVel, oi);
                     aa = Math.random();
-                    this.bullet[i].pVel.setPlus(this.position, ni);
-                    this.bullet[i].pVel.addCons(this.bullet[i].vVel, 0.1 * aa);
-                    this.bullet[i].opVel.set(this.bullet[i].pVel.x, this.bullet[i].pVel.y, this.bullet[i].pVel.z);
+                    this.bullet[i].position.setPlus(this.position, ni);
+                    this.bullet[i].position.addCons(this.bullet[i].vVel, 0.1 * aa);
+                    this.bullet[i].opVel.set(this.bullet[i].position.x, this.bullet[i].position.y, this.bullet[i].position.z);
                     this.bullet[i].bom = 0;
                     this.bullet[i].use = 15;
                     break;
@@ -898,7 +906,7 @@ class Plane {
                 dm.y = 40;
                 this.change_l2w(dm, oi);
 
-                ap.pVel.setPlus(this.position, ni);
+                ap.position.setPlus(this.position, ni);
                 ap.vpVel.setPlus(this.vpVel, oi);
 
                 // 発射向きを決める

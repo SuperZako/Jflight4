@@ -1,11 +1,3 @@
-// タイトル:NekoFlight for java
-// バージョン:Ver0.1
-// 著作権:Copyright (c) 1998 Isamu Kaneko
-// 作者:金子　勇
-// 会社名:NekoSoft
-// 説明:http://village.infoweb.ne.jp/~fwhz9346
-
-
 ///<reference path="Applet3D.ts" />
 ///<reference path="Plane.ts" />
 
@@ -106,19 +98,16 @@ class Jflight extends Applet3D {
     }
 
     // アプレットの初期化
-
-    public init() {
-    }
+    // public init() {
+    // }
 
     // アプレットの起動
-
-    public start() {
-    }
+    // public start() {
+    // }
 
     // アプレットの停止
-
-    public stop() {
-    }
+    // public stop() {
+    // }
 
     // 機体形状の初期化
 
@@ -286,7 +275,7 @@ class Jflight extends Applet3D {
 
                 // 各機体のワーク用座標変換行列を再計算
                 //this.plane[0].checkTransM(this.plane[i].aVel);
-                let a = new THREE.Euler(this.plane[i].aVel.x, -this.plane[i].aVel.y, this.plane[i].aVel.z, 'YXZ');
+                let a = new THREE.Euler(this.plane[i].rotation.x, -this.plane[i].rotation.y, this.plane[i].rotation.z, 'YXZ');
                 let m = new THREE.Matrix4();
                 m.makeRotationFromEuler(a);
                 m.transpose();
@@ -343,22 +332,22 @@ class Jflight extends Applet3D {
                 if (cp.z < 400) {
 
                     // 0.005秒後～0.04秒後の弾丸位置をライン表示
-                    dm.x = bp.pVel.x + bp.vVel.x * 0.005;
-                    dm.y = bp.pVel.y + bp.vVel.y * 0.005;
-                    dm.z = bp.pVel.z + bp.vVel.z * 0.005;
+                    dm.x = bp.position.x + bp.vVel.x * 0.005;
+                    dm.y = bp.position.y + bp.vVel.y * 0.005;
+                    dm.z = bp.position.z + bp.vVel.z * 0.005;
                     this.change3d(this.plane[0], dm, cp);
-                    dm.x = bp.pVel.x + bp.vVel.x * 0.04;
-                    dm.y = bp.pVel.y + bp.vVel.y * 0.04;
-                    dm.z = bp.pVel.z + bp.vVel.z * 0.04;
+                    dm.x = bp.position.x + bp.vVel.x * 0.04;
+                    dm.y = bp.position.y + bp.vVel.y * 0.04;
+                    dm.z = bp.position.z + bp.vVel.z * 0.04;
                     this.change3d(this.plane[0], dm, dm2);
                     this.drawBline(context, cp, dm2);
                 }
 
                 // 現在位置～0.05秒後の弾丸位置をライン表示
-                this.change3d(this.plane[0], bp.pVel, cp);
-                dm.x = bp.pVel.x + bp.vVel.x * 0.05;
-                dm.y = bp.pVel.y + bp.vVel.y * 0.05;
-                dm.z = bp.pVel.z + bp.vVel.z * 0.05;
+                this.change3d(this.plane[0], bp.position, cp);
+                dm.x = bp.position.x + bp.vVel.x * 0.05;
+                dm.y = bp.position.y + bp.vVel.y * 0.05;
+                dm.z = bp.position.z + bp.vVel.z * 0.05;
                 this.change3d(this.plane[0], dm, dm2);
                 this.drawBlined(context, cp, dm2);
             }
@@ -385,11 +374,11 @@ class Jflight extends Applet3D {
 
                 // ミサイルが爆発中でなければ、ミサイル本体を表示
                 if (ap.bom <= 0) {
-                    dm.x = ap.pVel.x + ap.aVel.x * 4;
-                    dm.y = ap.pVel.y + ap.aVel.y * 4;
-                    dm.z = ap.pVel.z + ap.aVel.z * 4;
+                    dm.x = ap.position.x + ap.aVel.x * 4;
+                    dm.y = ap.position.y + ap.aVel.y * 4;
+                    dm.z = ap.position.z + ap.aVel.z * 4;
                     this.change3d(this.plane[0], dm, cp);
-                    this.change3d(this.plane[0], ap.pVel, dm);
+                    this.change3d(this.plane[0], ap.position, dm);
                     this.drawAline(cp, dm);
                 }
 
@@ -407,7 +396,7 @@ class Jflight extends Applet3D {
 
             // ミサイルが爆発中の場合、爆円表示
             if (ap.bom > 0) {
-                this.change3d(this.plane[0], ap.pVel, cp);
+                this.change3d(this.plane[0], ap.position, cp);
                 this.fillBarc(cp);
             }
         }
