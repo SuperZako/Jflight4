@@ -1,7 +1,8 @@
 ﻿///<reference path="../node_modules/@types/three/index.d.ts" />
 ///<reference path="THREEx.KeyboardState.ts" />
+///<reference path="THREEx.WindowResize.ts" />
 ///<reference path="Jflight.ts" />
-
+///<reference path="HUD.ts" />
 
 /*
        Three.js "tutorials by example"
@@ -29,6 +30,7 @@ namespace Main {
     var camera: THREE.PerspectiveCamera;
     var renderer: THREE.WebGLRenderer;
 
+    var hud: HUD;
     // var stats: Stats;
     // var keyboard = new THREEx.KeyboardState();
     // var clock = new THREE.Clock();
@@ -45,8 +47,10 @@ namespace Main {
         scene = new THREE.Scene();
 
         // camera
-        const SCREEN_WIDTH: number = 600; // window.innerWidth;
-        const SCREEN_HEIGHT: number = 400; // window.innerHeight;
+        //const SCREEN_WIDTH: number = 600; // window.innerWidth;
+        //const SCREEN_HEIGHT: number = 400; // window.innerHeight;
+        const SCREEN_WIDTH = window.innerWidth;
+        const SCREEN_HEIGHT = window.innerHeight;
         const VIEW_ANGLE: number = 90;
         const ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT;
         const NEAR = 0.1;
@@ -66,7 +70,7 @@ namespace Main {
         container.appendChild(renderer.domElement);
 
         // EVENTS
-        // THREEx.WindowResize(renderer, camera);
+        THREEx.WindowResize(renderer, camera);
         // THREEx.FullScreen.bindKey({ charCode: 'm'.charCodeAt(0) });
 
         // CONTROLS
@@ -128,6 +132,7 @@ namespace Main {
         // sceneに追加
         scene.add(axis);
 
+        hud = new HUD(scene);
 
         // MESHES WITH ANIMATED TEXTURES!
 
@@ -147,8 +152,8 @@ namespace Main {
 
     export function animate() {
         requestAnimationFrame(animate);
-        render();
         update();
+        render();
     }
 
     function update() {
@@ -157,8 +162,8 @@ namespace Main {
 
         /* 2Dコンテキスト */
 
-        let context = canvas.getContext("2d");
-        flight.run(context);
+        //let context = canvas.getContext("2d");
+        flight.run();
         // boomer.update(1000 * delta);
 
         // man.update(1000 * delta);
@@ -178,40 +183,27 @@ namespace Main {
         m.elements[2] = elements[8]; m.elements[6] = elements[10]; m.elements[10] = -elements[9];
 
         camera.setRotationFromMatrix(m);
-
         camera.position.set(flight.camerapos.x, flight.camerapos.y, flight.camerapos.z);
+
+        let z = flight.plane[0].aVel.z;
+        hud.rotationZ(-z);
+        hud.setPosition(flight.camerapos.x, flight.camerapos.y, flight.camerapos.z);
 
         flight.plane[1].line.position.set(flight.plane[1].pVel.x, flight.plane[1].pVel.y, flight.plane[1].pVel.z);
         flight.plane[2].line.position.set(flight.plane[2].pVel.x, flight.plane[2].pVel.y, flight.plane[2].pVel.z);
         flight.plane[3].line.position.set(flight.plane[3].pVel.x, flight.plane[3].pVel.y, flight.plane[3].pVel.z);
 
 
-
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        flight.width = window.innerWidth;
+        flight.height = window.innerHeight;
     }
 
     function render() {
         renderer.render(scene, camera);
-
-        //let context = renderer.domElement.getContext("2d");
-
-
-        //if (context) {
-        //    context.strokeStyle = "rgb(0, 0, 255)";
-        //    //描画することを宣言する
-        //    context.beginPath();
-        //    //描き始め（始点）を決定する
-        //    context.moveTo(51, 15);
-        //    //始点から指定の座標まで線を引く
-        //    context.lineTo(100, 100);
-        //    //引き続き線を引いていく
-        //    context.lineTo(0, 100);
-        //    context.lineTo(51, 15);
-        //    //描画を終了する
-        //    context.closePath();
-
-        //    //上記記述は定義情報である。この命令で線を描く。
-        //    context.stroke();
-        //}
+        let context = canvas.getContext("2d");
+        flight.render(context);
     }
 }
 

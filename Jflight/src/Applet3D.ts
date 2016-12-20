@@ -1,13 +1,13 @@
 //
 // Applet3Dクラス
 //
-// ３Ｄ表示を支援するためのアプレットクラス
+// ３Ｄ表示を支援するためのクラス
 // 主に３Ｄ→２Ｄ変換と、キースキャンや各イベント管理を行う
 //
 
 class Applet3D {
-    sWidth: number;
-    sHeight: number;        // スクリーンの大きさ
+    width: number;
+    height: number;        // スクリーンの大きさ
     protected sCenterX: number;
     sCenterY: number;     // スクリーンのセンター座標
 
@@ -16,7 +16,7 @@ class Applet3D {
     bWidth: number; bHeight: number;                  // バックバッファの大きさ、リサイズ時にスクリーンの大きさにあわせる
 
 
-    // keyShoot: boolean;                     // スペースキーの状態
+    // keyShoot: boolean;                     // スペースキーの状態h
     // keyLeft: boolean;                      // 左カーソルキーの状態
     // keyRight: boolean;                     // 右カーソルキーの状態
     // keyUp: boolean;                        // 上カーソルキーの状態
@@ -27,43 +27,28 @@ class Applet3D {
 
     public constructor() {
         this.camerapos = new CVector3();
-        this.sWidth = 600;
-        this.sHeight = 400;
+        this.width = 600;
+        this.height = 400;
         this.sCenterX = 300;
         this.sCenterY = 200;
         try {
-            this.jbInit();
+            // this.jbInit();
         } catch (e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
         this.bgInit();
     }
 
     // バックバッファの初期化
-
     public bgInit() {
-        // this.backImage = this.createImage(this.sWidth, this.sHeight);
-        // if (this.backImage != null) {
-        //     this.bWidth = this.sWidth;
-        //     this.bHeight = this.sHeight;
-        //     this.bGraphics = this.backImage.getGraphics();
-        // }
     }
 
     // バックバッファのクリア
 
     public clear(context: CanvasRenderingContext2D | null) {
-
-        if (context !== null) {
-            context.fillStyle = "black";
-            // context.fillStyle = "rgba(0,0,0,0)";
-            context.fillRect(0, 0, this.sWidth, this.sHeight);
+        if (context) {
+            context.clearRect(0, 0, this.width, this.height);
         }
-    }
-
-    // バックバッファをフロントに転送
-
-    public flush() {
     }
 
     // ３Ｄ（sp）→２Ｄ（cp）変換
@@ -87,8 +72,7 @@ class Applet3D {
             cp.x = x1 * 50 / y1 + this.sCenterX;
             cp.y = -z1 * 50 / y1 + this.sCenterY;
             cp.z = y1 * 10;
-        }
-        else {
+        } else {
             // 変換後の奥行き（y1）が10以下ならクリップ
             cp.x = -10000;
             cp.y = -10000;
@@ -101,9 +85,7 @@ class Applet3D {
     public drawSline(context: CanvasRenderingContext2D | null, p0: CVector3, p1: CVector3) {
         if (context !== null && p0.x > -10000 && p0.x < 30000 && p0.y > -10000 && p0.y < 30000 &&
             p1.x > -10000 && p1.x < 30000 && p1.y > -10000 && p1.y < 30000) {
-            // bGraphics.setColor(Color.white);
             context.strokeStyle = "white";
-            // bGraphics.drawLine((p0.x, p0.y, p1.x, p1.y);
             context.beginPath();
             context.moveTo(p0.x, p0.y);
             context.lineTo(p1.x, p1.y);
@@ -194,33 +176,36 @@ class Applet3D {
         }
     }
 
-    // イベント処理初期化
-
-    private jbInit() {
-        //        this.setBackground(Color.black);
-        //        this.addKeyListener(new java.awt.event.KeyAdapter() {
-        //            public void keyPressed(KeyEvent e) {
-        //                this_keyPressed(e);
-        //            }
-        //      public  keyReleased(KeyEvent e) {
-        //                this_keyReleased(e);
-        //            }
-        //    });
-        //this.addComponentListener(new java.awt.event.ComponentAdapter() {
-        //    public void componentResized(ComponentEvent e) {
-        //        this_componentResized(e);
-        //    }
-        //    });
-        //this.setForeground(Color.white);
+    public fillText(context: CanvasRenderingContext2D | null, text: string, x: number, y: number) {
+        if (context) {
+            context.font = "18px 'ＭＳ Ｐゴシック'";
+            context.fillStyle = "white";
+            context.fillText(text, x, y);
+        }
     }
 
-    // リサイズイベント処理
-    //this_componentResized(e: ComponentEvent) {
-    //    this.sWidth = getSize().width;
-    //    this.sHeight = getSize().height;
-    //    this.sCenterX = (sWidth / 2);
-    //    this.sCenterY = (sHeight / 2);
-    //}
+    public drawLine(context: CanvasRenderingContext2D | null, strokeStyle: string, x1: number, y1: number, x2: number, y2: number) {
+        if (context) {
+            context.strokeStyle = strokeStyle;
+            //描画することを宣言する
+            context.beginPath();
+            //描き始め（始点）を決定する
+            context.moveTo(x1, y1);
+            //始点から指定の座標まで線を引く
+            context.lineTo(x2, y2);
+            //引き続き線を引いていく
+            //context.lineTo(0, 100);
+            //context.lineTo(51, 15);
+            //描画を終了する
+            context.closePath();
+
+            //上記記述は定義情報である。この命令で線を描く。
+            context.stroke();
+
+
+
+        }
+    }
 }
 
 

@@ -431,7 +431,7 @@ class Plane {
             world.change3d(this, world.plane[this.gunTarget].pVel, dm);
 
             // スクリーン内なら
-            if (dm.x > 0 && dm.x < world.sWidth && dm.y > 0 && dm.y < world.sHeight) {
+            if (dm.x > 0 && dm.x < world.width && dm.y > 0 && dm.y < world.height) {
                 this.targetSx = dm.x;
                 this.targetSy = dm.y;
             }
@@ -518,8 +518,6 @@ class Plane {
         this.aVel.z += (-this.vaVel.x * this.sinb + this.vaVel.z * this.cosb) / this.cosa * Jflight.DT;
 
         // 機体の角度を一定範囲に丸めておく
-
-        //int q;
         for (let q = 0; q < 3 && this.aVel.x >= Math.PI / 2; q++) {
             this.aVel.x = Math.PI - this.aVel.x;
             this.aVel.y += Math.PI;
@@ -790,7 +788,6 @@ class Plane {
                 this.bullet[i].move(world, this);
 
         // 弾丸発射処理
-
         if (this.gunShoot && this.gunTemp++ < Plane.MAXT) {
             for (i = 0; i < Plane.BMAX; i++) {
                 if (this.bullet[i].use === 0) {
@@ -804,9 +801,9 @@ class Plane {
                     break;
                 }
             }
-        }
-        else if (this.gunTemp > 0)
+        } else if (this.gunTemp > 0) {
             this.gunTemp--;
+        }
     }
 
     // ミサイル移動と発射処理

@@ -217,6 +217,11 @@ class Jflight extends Applet3D {
 
     public draw(context: CanvasRenderingContext2D | null) {
 
+        let width = this.width;
+        let height = this.height;
+        let centerX = width / 2;
+        let centerY = height / 2;
+
         // バックバッファクリア
         this.clear(context);
 
@@ -224,25 +229,43 @@ class Jflight extends Applet3D {
         this.plane[0].checkTrans();
 
         // 地面表示
-        this.writeGround(context);
+        // this.writeGround(context);
 
         // 機体表示
-        this.writePlane(context);
+        // this.writePlane(context);
 
-        // バックバッファをフロントにコピー
-        this.flush();
+        this.drawLine(context, "rgb(255, 255, 255)", centerX, height / 2 - 15, centerX, centerY + 15);
+        this.drawLine(context, "rgb(255, 255, 255)", centerX - 15, centerY, centerX + 15, centerY);
 
-        // 確実に表示されるようにsync()を呼んでおく
-        // this.getToolkit().sync();
+
+        let y = this.plane[0].aVel.y;
+        if (context) {
+            context.save();
+            // Move registration point to the center of the canvas
+            context.translate(width / 2, height / 2);
+
+            // Rotate 1 degree
+            context.rotate(-y);
+
+            // Move registration point back to the top left corner of canvas
+            context.translate(-width / 2, -height / 2);
+
+
+            let x = -this.plane[0].aVel.x;
+            for (let i = -170; i <= 180; i += 10) {
+                // let x = -this.plane[0].aVel.x + (i * Math.PI / 180);
+                // let distance = 300;
+                this.drawLine(context, "rgb(255, 255, 255)", centerX - 150, centerY + i * 20 + Math.tan(x) * centerY, centerX + 150, centerY + i * 20 + Math.tan(x) * centerY);
+            }
+            context.restore();
+        }
     }
 
     // メインループ
 
-    public run(context: CanvasRenderingContext2D | null) {
-        //while (true) {
-
+    public run() {
         // スペースキーが押されたら自動操縦OFF
-        if (/*this.keyShoot*/keyboard.pressed("space")) {
+        if (keyboard.pressed("space")) {
             this.autoFlight = false;
         }
 
@@ -251,16 +274,13 @@ class Jflight extends Applet3D {
         for (let i = 1; i < Jflight.PMAX; i++) {
             this.plane[i].move(this, true);
         }
+    }
 
+    public render(context: CanvasRenderingContext2D | null) {
         // カメラ位置を自機にセットして表示
         this.camerapos.set(this.plane[0].pVel.x, this.plane[0].pVel.y, this.plane[0].pVel.z);
         this.draw(context);
-
-        // 一定時間ウェイト
-        // try { Thread.sleep(10); } catch (InterruptedException e) { };
-        //}
     }
-
     // 各機体を表示
     // 弾丸やミサイルもここで表示している
 
