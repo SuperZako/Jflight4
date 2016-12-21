@@ -41,9 +41,7 @@ class Wing extends PhysicsState {
 
     public constructor() {
         super();
-        // this.pVel = new CVector3();
 
-        // this.forward = new CVector3();
         this.fVel = new CVector3();
 
         this.m_pp = new CVector3();
@@ -65,21 +63,18 @@ class Wing extends PhysicsState {
     // veは空気密度、noは翼No.（迎角計算に使用）、boostはエンジンブースト
 
     public calc(plane: Plane, ve: number, no: number, boost: boolean) {
-        let vv, t0, n, at, sin, cos, rr, cl, cd, ff, dx, dy, dz;
+        let n, at, rr, cl, cd, ff;
 
         // 機体の速度と回転率、翼の位置から翼における速度を求める（外積計算）
         this.m_vp.x = plane.localVelocity.x + this.position.y * plane.vaVel.z - this.position.z * plane.vaVel.y;
         this.m_vp.y = plane.localVelocity.y + this.position.z * plane.vaVel.x - this.position.x * plane.vaVel.z;
         this.m_vp.z = plane.localVelocity.z + this.position.x * plane.vaVel.y - this.position.y * plane.vaVel.x;
 
-        if (this.m_vp.abs() > 1000) {
-            console.log("!!!");
-        }
 
         // 翼のひねりを基に、基本座標ベクトルを回転
 
-        sin = Math.sin(this.bAngle);
-        cos = Math.cos(this.bAngle);
+        let sin = Math.sin(this.bAngle);
+        let cos = Math.cos(this.bAngle);
 
         this.m_qx.x = this.unitX.x * cos - this.zVel.x * sin;
         this.m_qx.y = this.unitX.y * cos - this.zVel.y * sin;
@@ -104,7 +99,7 @@ class Wing extends PhysicsState {
         this.m_wz.y = this.m_qy.y * sin + this.m_qz.y * cos;
         this.m_wz.z = this.m_qy.z * sin + this.m_qz.z * cos;
 
-        t0 = 0;
+        let t0 = 0;
 
         this.fVel.set(0, 0, 0);
 
@@ -112,7 +107,7 @@ class Wing extends PhysicsState {
 
             // 翼計算
 
-            vv = this.m_vp.abs();
+            let vv = this.m_vp.abs();
 
             // 翼速度の単位ベクトルを求める(機体座標)
 
@@ -122,9 +117,9 @@ class Wing extends PhysicsState {
 
             // 機体座標の翼速度を翼座標系に変換
 
-            dx = this.m_wx.x * this.m_vp.x + this.m_wx.y * this.m_vp.y + this.m_wx.z * this.m_vp.z;
-            dy = this.m_wy.x * this.m_vp.x + this.m_wy.y * this.m_vp.y + this.m_wy.z * this.m_vp.z;
-            dz = this.m_wz.x * this.m_vp.x + this.m_wz.y * this.m_vp.y + this.m_wz.z * this.m_vp.z;
+            let dx = this.m_wx.x * this.m_vp.x + this.m_wx.y * this.m_vp.y + this.m_wx.z * this.m_vp.z;
+            let dy = this.m_wy.x * this.m_vp.x + this.m_wy.y * this.m_vp.y + this.m_wy.z * this.m_vp.z;
+            let dz = this.m_wz.x * this.m_vp.x + this.m_wz.y * this.m_vp.y + this.m_wz.z * this.m_vp.z;
 
             // 揚力方向の速度成分を求める
 

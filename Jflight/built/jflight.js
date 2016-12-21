@@ -507,8 +507,6 @@ var Wing = (function (_super) {
         _this.unitX = new CVector3(); // �����W�w�P�ʃx�N�g���i�@�̍��W�j
         _this.yVel = new CVector3(); // �����W�x�P�ʃx�N�g���i�@�̍��W�j
         _this.zVel = new CVector3(); // �����W�y�P�ʃx�N�g���i�@�̍��W�j
-        // this.pVel = new CVector3();
-        // this.forward = new CVector3();
         _this.fVel = new CVector3();
         _this.m_pp = new CVector3();
         _this.m_op = new CVector3();
@@ -528,17 +526,14 @@ var Wing = (function (_super) {
     // fVel�Ɍv�Z���ʂ����܂�
     // ve�͋�C���x�Ano�͗�No.�i�}�p�v�Z�Ɏg�p�j�Aboost�̓G���W���u�[�X�g
     Wing.prototype.calc = function (plane, ve, no, boost) {
-        var vv, t0, n, at, sin, cos, rr, cl, cd, ff, dx, dy, dz;
+        var n, at, rr, cl, cd, ff;
         // �@�̂̑��x�Ɖ�]���A���̈ʒu���痃�ɂ����鑬�x����߂�i�O�όv�Z�j
         this.m_vp.x = plane.localVelocity.x + this.position.y * plane.vaVel.z - this.position.z * plane.vaVel.y;
         this.m_vp.y = plane.localVelocity.y + this.position.z * plane.vaVel.x - this.position.x * plane.vaVel.z;
         this.m_vp.z = plane.localVelocity.z + this.position.x * plane.vaVel.y - this.position.y * plane.vaVel.x;
-        if (this.m_vp.abs() > 1000) {
-            console.log("!!!");
-        }
         // ���̂Ђ˂���ɁA��{���W�x�N�g�����]
-        sin = Math.sin(this.bAngle);
-        cos = Math.cos(this.bAngle);
+        var sin = Math.sin(this.bAngle);
+        var cos = Math.cos(this.bAngle);
         this.m_qx.x = this.unitX.x * cos - this.zVel.x * sin;
         this.m_qx.y = this.unitX.y * cos - this.zVel.y * sin;
         this.m_qx.z = this.unitX.z * cos - this.zVel.z * sin;
@@ -555,19 +550,19 @@ var Wing = (function (_super) {
         this.m_wz.x = this.m_qy.x * sin + this.m_qz.x * cos;
         this.m_wz.y = this.m_qy.y * sin + this.m_qz.y * cos;
         this.m_wz.z = this.m_qy.z * sin + this.m_qz.z * cos;
-        t0 = 0;
+        var t0 = 0;
         this.fVel.set(0, 0, 0);
         if (this.sVal > 0) {
             // ���v�Z
-            vv = this.m_vp.abs();
+            var vv = this.m_vp.abs();
             // �����x�̒P�ʃx�N�g������߂�(�@�̍��W)
             this.m_ti.x = this.m_vp.x / vv;
             this.m_ti.y = this.m_vp.y / vv;
             this.m_ti.z = this.m_vp.z / vv;
             // �@�̍��W�̗����x�𗃍��W�n�ɕϊ�
-            dx = this.m_wx.x * this.m_vp.x + this.m_wx.y * this.m_vp.y + this.m_wx.z * this.m_vp.z;
-            dy = this.m_wy.x * this.m_vp.x + this.m_wy.y * this.m_vp.y + this.m_wy.z * this.m_vp.z;
-            dz = this.m_wz.x * this.m_vp.x + this.m_wz.y * this.m_vp.y + this.m_wz.z * this.m_vp.z;
+            var dx = this.m_wx.x * this.m_vp.x + this.m_wx.y * this.m_vp.y + this.m_wx.z * this.m_vp.z;
+            var dy = this.m_wy.x * this.m_vp.x + this.m_wy.y * this.m_vp.y + this.m_wy.z * this.m_vp.z;
+            var dz = this.m_wz.x * this.m_vp.x + this.m_wz.y * this.m_vp.y + this.m_wz.z * this.m_vp.z;
             // �g�͕����̑��x��������߂�
             rr = Math.sqrt(dx * dx + dy * dy);
             if (rr > 0.001) {
