@@ -533,6 +533,9 @@ var Wing = (function (_super) {
         this.m_vp.x = plane.localVelocity.x + this.position.y * plane.vaVel.z - this.position.z * plane.vaVel.y;
         this.m_vp.y = plane.localVelocity.y + this.position.z * plane.vaVel.x - this.position.x * plane.vaVel.z;
         this.m_vp.z = plane.localVelocity.z + this.position.x * plane.vaVel.y - this.position.y * plane.vaVel.x;
+        if (this.m_vp.abs() > 1000) {
+            console.log("!!!");
+        }
         // ���̂Ђ˂���ɁA��{���W�x�N�g�����]
         sin = Math.sin(this.bAngle);
         cos = Math.cos(this.bAngle);
@@ -608,9 +611,9 @@ var Wing = (function (_super) {
             // ���͌v�Z
             // ���͂���߂�
             if (boost)
-                ff = (5 * 10) / 0.9 * ve * 4.8 * this.tVal;
+                ff = ((5 * 10) / 0.9) * ve * 4.8 * this.tVal;
             else
-                ff = plane.power / 0.9 * ve * 4.8 * this.tVal;
+                ff = (plane.power / 0.9) * ve * 4.8 * this.tVal;
             // �n�ʂɋ߂��ꍇ�A�������̐��͂�グ��
             if (plane.height < 20)
                 ff *= (1 + (20 - plane.height) / 40);
@@ -861,8 +864,6 @@ var Missile = (function (_super) {
             this.m_a0.setMinus(this.position, tp.position);
             if (this.m_a0.abs() < 10) {
                 this.bom = 10;
-                // ����
-                tp.posInit();
             }
         }
         if (this.use >= 0) {
@@ -941,11 +942,11 @@ var Plane = (function (_super) {
         _this.stickR = 0.1; // ���c�n�̊��x (R-�Z���^�[�ւ̌�����)
         _this.stickA = 0.05; // ���c�n�̊��x�iA-�ω����j
         // �@�e�n
-        _this.bullet = []; // �e�e�ۃI�u�W�F�N�g
+        _this.bullets = []; // �e�e�ۃI�u�W�F�N�g
         // �~�T�C���n
         _this.aam = []; // �e�~�T�C���I�u�W�F�N�g
         for (var i = 0; i < Plane.BMAX; i++) {
-            _this.bullet.push(new Bullet(scene));
+            _this.bullets.push(new Bullet(scene));
         }
         for (var i = 0; i < Plane.MMMAX; i++) {
             _this.aam.push(new Missile(scene));
@@ -1138,18 +1139,20 @@ var Plane = (function (_super) {
             }
         }
         // ���b�N�ڕW��������Ȃ��ꍇ�A��ԋ߂��ڕW�Ƀ��b�N
-        for (var m1 = 1; m1 < 4; m1++)
+        for (var m1 = 1; m1 < 4; m1++) {
             if (nno[m1] < 0) {
                 nno[m1] = nno[0];
                 dis[m1] = dis[0];
             }
+        }
         // �S�ȍ~�̃~�T�C���́A����|�b�h�̃~�T�C���ɍ��킹��
         for (var m1 = 4; m1 < Plane.MMMAX; m1++) {
             nno[m1] = nno[m1 % 4];
             dis[m1] = dis[m1 % 4];
         }
-        for (var m1 = 0; m1 < Plane.MMMAX; m1++)
+        for (var m1 = 0; m1 < Plane.MMMAX; m1++) {
             this.aamTarget[m1] = nno[m1];
+        }
         // �@�e�̖ڕW�i��ڕW�j�́A�ł�߂��G�@�ɃZ�b�g
         this.gunTarget = nno[0];
         this.targetDis = Math.sqrt(dis[0]);
@@ -1289,10 +1292,16 @@ var Plane = (function (_super) {
             v.crossVectors(wing.position, wing.fVel);
             am.sub(v);
         }
+        if (am.y > 100000) {
+            console.log("!!!");
+        }
         // �p�x�ω���ϕ�
         this.vaVel.x += am.x / this.iMass.x * Jflight.DT;
         this.vaVel.y += am.y / this.iMass.y * Jflight.DT;
         this.vaVel.z += am.z / this.iMass.z * Jflight.DT;
+        //let rotX = (this.vaVel.x * this.cosb + this.vaVel.z * this.sinb) * Jflight.DT;
+        //let rotY = (this.vaVel.y + (this.vaVel.x * this.sinb - this.vaVel.z * this.cosb) * this.sina / this.cosa) * Jflight.DT;
+        //let rotZ = (-this.vaVel.x * this.sinb + this.vaVel.z * this.cosb) / this.cosa * Jflight.DT;
         this.rotation.x += (this.vaVel.x * this.cosb + this.vaVel.z * this.sinb) * Jflight.DT;
         this.rotation.y += (this.vaVel.y + (this.vaVel.x * this.sinb - this.vaVel.z * this.cosb) * this.sina / this.cosa) * Jflight.DT;
         this.rotation.z += (-this.vaVel.x * this.sinb + this.vaVel.z * this.cosb) / this.cosa * Jflight.DT;
@@ -1322,9 +1331,15 @@ var Plane = (function (_super) {
         // �����x�����
         this.gVel.setConsInv(af, this.mass);
         // �@�̂Ŕ��������R��[���I�ɐ���
-        this.velocity.x -= this.velocity.x * this.velocity.x * 0.00002;
-        this.velocity.y -= this.velocity.y * this.velocity.y * 0.00002;
-        this.velocity.z -= this.velocity.z * this.velocity.z * 0.00002;
+        var _v = new CVector3();
+        _v.set(this.velocity.x, this.velocity.y, this.velocity.z);
+        var len = _v.abs();
+        _v.x /= len;
+        _v.y /= len;
+        _v.z /= len;
+        this.velocity.x -= this.velocity.x * this.velocity.x * 0.00002 * _v.x;
+        this.velocity.y -= this.velocity.y * this.velocity.y * 0.00002 * _v.y;
+        this.velocity.z -= this.velocity.z * this.velocity.z * 0.00002 * _v.z;
         // �n�ʂ̌X������
         world.gGrad(this.position.x, this.position.y, dm);
         if (this.onGround) {
@@ -1366,8 +1381,9 @@ var Plane = (function (_super) {
         this.power = 4;
         this.throttle = this.power;
         this.stickPos.z = 0;
-        if (this.level < 0)
+        if (this.level < 0) {
             this.level = 0;
+        }
         var dm_p = new CVector3();
         var dm_a = new CVector3();
         // �ڕW�Ǝ��@�̈ʒu�֌W����߁A�@�̍��W�ɕϊ����Ă���
@@ -1520,22 +1536,23 @@ var Plane = (function (_super) {
             this.gunVy = 0;
         }
         // �e�ۈړ�
-        for (var i = 0; i < Plane.BMAX; i++) {
-            if (this.bullet[i].use !== 0) {
-                this.bullet[i].move(world, this);
+        for (var _i = 0, _a = this.bullets; _i < _a.length; _i++) {
+            var bullet = _a[_i];
+            if (bullet.use !== 0) {
+                bullet.move(world, this);
             }
         }
         // �e�۔��ˏ���
         if (this.gunShoot && this.gunTemp++ < Plane.MAXT) {
             for (var i = 0; i < Plane.BMAX; i++) {
-                if (this.bullet[i].use === 0) {
-                    this.bullet[i].velocity.setPlus(this.velocity, oi);
+                if (this.bullets[i].use === 0) {
+                    this.bullets[i].velocity.setPlus(this.velocity, oi);
                     var aa = Math.random();
-                    this.bullet[i].position.setPlus(this.position, ni);
-                    this.bullet[i].position.addCons(this.bullet[i].velocity, 0.1 * aa);
-                    this.bullet[i].oldPosition.set(this.bullet[i].position.x, this.bullet[i].position.y, this.bullet[i].position.z);
-                    this.bullet[i].bom = 0;
-                    this.bullet[i].use = 15;
+                    this.bullets[i].position.setPlus(this.position, ni);
+                    this.bullets[i].position.addCons(this.bullets[i].velocity, 0.1 * aa);
+                    this.bullets[i].oldPosition.set(this.bullets[i].position.x, this.bullets[i].position.y, this.bullets[i].position.z);
+                    this.bullets[i].bom = 0;
+                    this.bullets[i].use = 15;
                     break;
                 }
             }
@@ -1563,9 +1580,11 @@ var Plane = (function (_super) {
         if (this.aamShoot && this.targetDis > 50) {
             // �g���Ă��Ȃ��~�T�C����T��
             var k = void 0;
-            for (k = 0; k < Plane.MMMAX; k++)
-                if (this.aam[k].use < 0 && this.aamTarget[k] >= 0)
+            for (k = 0; k < Plane.MMMAX; k++) {
+                if (this.aam[k].use < 0 && this.aamTarget[k] >= 0) {
                     break;
+                }
+            }
             if (k !== Plane.MMMAX) {
                 var ap = this.aam[k];
                 //  ���ˈʒu����߂�
@@ -1896,7 +1915,7 @@ var Jflight = (function (_super) {
         var dm2 = new CVector3();
         var cp = new CVector3();
         for (var j = 0; j < Plane.BMAX; j++) {
-            var bp = aplane.bullet[j];
+            var bp = aplane.bullets[j];
             // use�J�E���^��0���傫����̂̂ݕ\��
             if (bp.use > 0) {
                 // �e�ۂ̈ʒu�Ƃ��̑��x���烉�C����\��
@@ -2020,11 +2039,13 @@ Jflight.G = -9.8; // �d�͉����x
 Jflight.DT = 0.05; // �v�Z�X�e�b�v��
 Jflight.obj = []; // �@�̂̌`��i�O�p�`�̏W���j
 var HUD = (function () {
-    //mouseX: number;
-    //mouseY: number;
     function HUD(canvas, plane) {
         this.canvas = canvas;
         this.plane = plane;
+        var context = canvas.getContext("2d");
+        if (context) {
+            this.context = context;
+        }
     }
     HUD.prototype.drawLine = function (context, strokeStyle, x1, y1, x2, y2) {
         context.save();
@@ -2053,6 +2074,13 @@ var HUD = (function () {
         context.lineWidth = 2;
         context.strokeStyle = strokeStyle;
         context.stroke();
+        context.restore();
+    };
+    HUD.prototype.fillText = function (context, text, x, y) {
+        context.save();
+        context.font = "18px 'ＭＳ Ｐゴシック'";
+        context.fillStyle = "white";
+        context.fillText(text, x, y);
         context.restore();
     };
     HUD.prototype.drawCross = function (context, x, y, length) {
@@ -2088,6 +2116,7 @@ var HUD = (function () {
                 this.drawLine(context, "rgb(255, 255, 255)", centerX - 150, centerY + i * 20 + Math.tan(x) * centerY, centerX + 150, centerY + i * 20 + Math.tan(x) * centerY);
             }
             context.restore();
+            this.fillText(context, "Speed=" + this.plane.velocity.abs(), 50, 50);
         }
     };
     return HUD;
@@ -2126,8 +2155,6 @@ var Main;
         // scene
         scene = new THREE.Scene();
         // camera
-        //const SCREEN_WIDTH: number = 600; // window.innerWidth;
-        //const SCREEN_HEIGHT: number = 400; // window.innerHeight;
         var SCREEN_WIDTH = window.innerWidth;
         var SCREEN_HEIGHT = window.innerHeight;
         var VIEW_ANGLE = 90;
@@ -2259,6 +2286,28 @@ var Main;
 })(Main || (Main = {}));
 Main.init();
 Main.animate();
+var MathHelper;
+(function (MathHelper) {
+    MathHelper.EpsilonDouble = 1e-6;
+    MathHelper.Pi = Math.PI; // πの値を表します。
+    MathHelper.PiOver2 = Math.PI / 2; // πを 2 で割った値 (π/2) を表します。
+    MathHelper.PiOver4 = Math.PI / 4; // πを 4 で割った値 (π/4) を表します。
+    MathHelper.TwoPi = Math.PI * 2; // pi の 2 倍の値を表します。
+    function toDegrees(radians) {
+        // This method uses double precission internally,
+        // though it returns single float
+        // Factor = 180 / pi
+        return radians * 180 / MathHelper.Pi;
+    }
+    MathHelper.toDegrees = toDegrees;
+    function toRadians(degrees) {
+        // This method uses double precission internally,
+        // though it returns single float
+        // Factor = pi / 180
+        return degrees * MathHelper.Pi / 180;
+    }
+    MathHelper.toRadians = toRadians;
+})(MathHelper || (MathHelper = {}));
 var Vector3Helper;
 (function (Vector3Helper) {
     var result = new THREE.Vector3();

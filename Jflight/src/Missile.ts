@@ -1,10 +1,7 @@
-
-
 //
 // missile
 // ミサイルクラス
 //
-
 class Missile extends PhysicsState {
 
     // 定数
@@ -197,7 +194,7 @@ class Missile extends PhysicsState {
                 this.bom = 10;
 
                 // 撃墜
-                tp.posInit();
+                // tp.posInit();
             }
         }
 

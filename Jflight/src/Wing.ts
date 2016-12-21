@@ -32,8 +32,10 @@ class Wing extends PhysicsState {
 
     // テンポラリオブジェクト
 
-    protected m_pp: CVector3; m_op: CVector3; m_ti: CVector3; m_ni: CVector3; m_vp: CVector3; m_vp2: CVector3;
-    protected m_wx: CVector3; m_wy: CVector3; m_wz: CVector3; m_qx: CVector3; m_qy: CVector3; m_qz: CVector3;
+    protected m_pp: CVector3; protected m_op: CVector3; protected m_ti: CVector3; protected m_ni: CVector3; protected m_vp: CVector3; protected m_vp2: CVector3;
+    protected m_wx: CVector3; protected m_wy: CVector3; protected m_wz: CVector3;
+
+    protected m_qx: CVector3; protected m_qy: CVector3; protected m_qz: CVector3;
 
     // コンストラクタ
 
@@ -69,6 +71,10 @@ class Wing extends PhysicsState {
         this.m_vp.x = plane.localVelocity.x + this.position.y * plane.vaVel.z - this.position.z * plane.vaVel.y;
         this.m_vp.y = plane.localVelocity.y + this.position.z * plane.vaVel.x - this.position.x * plane.vaVel.z;
         this.m_vp.z = plane.localVelocity.z + this.position.x * plane.vaVel.y - this.position.y * plane.vaVel.x;
+
+        if (this.m_vp.abs() > 1000) {
+            console.log("!!!");
+        }
 
         // 翼のひねりを基に、基本座標ベクトルを回転
 
@@ -146,6 +152,7 @@ class Wing extends PhysicsState {
             // 迎角を求める
 
             at = -Math.atan(dz / dy);
+
             if (no === 0)
                 plane.aoa = at;
 
@@ -177,9 +184,9 @@ class Wing extends PhysicsState {
 
             // 推力を求める
             if (boost)
-                ff = (5 * 10) / 0.9 * ve * 4.8 * this.tVal;
+                ff = ((5 * 10) / 0.9) * ve * 4.8 * this.tVal;
             else
-                ff = plane.power / 0.9 * ve * 4.8 * this.tVal;
+                ff = (plane.power / 0.9) * ve * 4.8 * this.tVal;
 
             // 地面に近い場合、見かけの推力を上げる
             if (plane.height < 20)

@@ -760,6 +760,7 @@
     <TypeScriptCompile Include="src\app.ts" />
     <TypeScriptCompile Include="src\Applet3D.ts" />
     <TypeScriptCompile Include="src\Bullet.ts" />
+    <TypeScriptCompile Include="src\Helpers\MathHelper.ts" />
     <TypeScriptCompile Include="src\Math\CVector3.ts" />
     <TypeScriptCompile Include="src\Helpers\Vector3Helper.ts" />
     <TypeScriptCompile Include="src\HUD.ts" />

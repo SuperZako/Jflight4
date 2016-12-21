@@ -74,7 +74,7 @@ class Plane extends PhysicsState {
 
     // 機銃系
 
-    public bullet: Bullet[] = [];         // 各弾丸オブジェクト
+    public bullets: Bullet[] = [];         // 各弾丸オブジェクト
     public gunTarget: number;           // 主目標の機体No.
     public targetSx: number;
     targetSy: number;  // 主目標の位置（スクリーン座標）
@@ -101,7 +101,7 @@ class Plane extends PhysicsState {
     public constructor(scene: THREE.Scene) {
         super();
         for (let i = 0; i < Plane.BMAX; i++) {
-            this.bullet.push(new Bullet(scene));
+            this.bullets.push(new Bullet(scene));
         }
 
         for (let i = 0; i < Plane.MMMAX; i++) {
@@ -266,6 +266,7 @@ class Plane extends PhysicsState {
         if (this.cosa > -1e-9 && this.cosa < 0) {
             this.cosa = -1e-9;
         }
+
         this.sinb = Math.sin(y); this.cosb = Math.cos(y);
         this.sinc = Math.sin(z); this.cosc = Math.cos(z);
 
@@ -344,11 +345,12 @@ class Plane extends PhysicsState {
 
         // ロック目標が見つからない場合、一番近い目標にロック
 
-        for (let m1 = 1; m1 < 4; m1++)
+        for (let m1 = 1; m1 < 4; m1++) {
             if (nno[m1] < 0) {
                 nno[m1] = nno[0];
                 dis[m1] = dis[0];
             }
+        }
 
         // ４以降のミサイルは、同一ポッドのミサイルに合わせる
 
@@ -357,8 +359,9 @@ class Plane extends PhysicsState {
             dis[m1] = dis[m1 % 4];
         }
 
-        for (let m1 = 0; m1 < Plane.MMMAX; m1++)
+        for (let m1 = 0; m1 < Plane.MMMAX; m1++) {
             this.aamTarget[m1] = nno[m1];
+        }
 
         // 機銃の目標（主目標）は、最も近い敵機にセット
         this.gunTarget = nno[0];
@@ -534,17 +537,28 @@ class Plane extends PhysicsState {
             // am.x -= (wing.pVel.y * wing.fVel.z - wing.pVel.z * wing.fVel.y);
             // am.y -= (wing.pVel.z * wing.fVel.x - wing.pVel.x * wing.fVel.z);
             // am.z -= (wing.pVel.x * wing.fVel.y - wing.pVel.y * wing.fVel.x);
+
+
             // v = position × velocity
             // am -= v;
             v.crossVectors(<any>wing.position, <any>wing.fVel);
             am.sub(<any>v);
         }
 
+
+        if (am.y > 100000) {
+            console.log("!!!")
+        }
         // 角度変化を積分
 
         this.vaVel.x += am.x / this.iMass.x * Jflight.DT;
         this.vaVel.y += am.y / this.iMass.y * Jflight.DT;
         this.vaVel.z += am.z / this.iMass.z * Jflight.DT;
+
+        //let rotX = (this.vaVel.x * this.cosb + this.vaVel.z * this.sinb) * Jflight.DT;
+        //let rotY = (this.vaVel.y + (this.vaVel.x * this.sinb - this.vaVel.z * this.cosb) * this.sina / this.cosa) * Jflight.DT;
+        //let rotZ = (-this.vaVel.x * this.sinb + this.vaVel.z * this.cosb) / this.cosa * Jflight.DT;
+
 
         this.rotation.x += (this.vaVel.x * this.cosb + this.vaVel.z * this.sinb) * Jflight.DT;
         this.rotation.y += (this.vaVel.y + (this.vaVel.x * this.sinb - this.vaVel.z * this.cosb) * this.sina / this.cosa) * Jflight.DT;
@@ -581,9 +595,16 @@ class Plane extends PhysicsState {
 
         // 機体で発生する抵抗を擬似的に生成
 
-        this.velocity.x -= this.velocity.x * this.velocity.x * 0.00002;
-        this.velocity.y -= this.velocity.y * this.velocity.y * 0.00002;
-        this.velocity.z -= this.velocity.z * this.velocity.z * 0.00002;
+        let _v = new CVector3()
+        _v.set(this.velocity.x, this.velocity.y, this.velocity.z);
+        let len = _v.abs();
+        _v.x /= len;
+        _v.y /= len;
+        _v.z /= len;
+
+        this.velocity.x -= this.velocity.x * this.velocity.x * 0.00002 * _v.x;
+        this.velocity.y -= this.velocity.y * this.velocity.y * 0.00002 * _v.y;
+        this.velocity.z -= this.velocity.z * this.velocity.z * 0.00002 * _v.z;
 
         // 地面の傾き処理
 
@@ -639,8 +660,9 @@ class Plane extends PhysicsState {
         this.throttle = this.power;
         this.stickPos.z = 0;
 
-        if (this.level < 0)
+        if (this.level < 0) {
             this.level = 0;
+        }
 
         let dm_p = new CVector3();
         let dm_a = new CVector3();
@@ -822,24 +844,23 @@ class Plane extends PhysicsState {
         }
 
         // 弾丸移動
-
-        for (let i = 0; i < Plane.BMAX; i++) {
-            if (this.bullet[i].use !== 0) {
-                this.bullet[i].move(world, this);
+        for (let bullet of this.bullets) {
+            if (bullet.use !== 0) {
+                bullet.move(world, this);
             }
         }
 
         // 弾丸発射処理
         if (this.gunShoot && this.gunTemp++ < Plane.MAXT) {
             for (let i = 0; i < Plane.BMAX; i++) {
-                if (this.bullet[i].use === 0) {
-                    this.bullet[i].velocity.setPlus(this.velocity, oi);
+                if (this.bullets[i].use === 0) {
+                    this.bullets[i].velocity.setPlus(this.velocity, oi);
                     let aa = Math.random();
-                    this.bullet[i].position.setPlus(this.position, ni);
-                    this.bullet[i].position.addCons(this.bullet[i].velocity, 0.1 * aa);
-                    this.bullet[i].oldPosition.set(this.bullet[i].position.x, this.bullet[i].position.y, this.bullet[i].position.z);
-                    this.bullet[i].bom = 0;
-                    this.bullet[i].use = 15;
+                    this.bullets[i].position.setPlus(this.position, ni);
+                    this.bullets[i].position.addCons(this.bullets[i].velocity, 0.1 * aa);
+                    this.bullets[i].oldPosition.set(this.bullets[i].position.x, this.bullets[i].position.y, this.bullets[i].position.z);
+                    this.bullets[i].bom = 0;
+                    this.bullets[i].use = 15;
                     break;
                 }
             }
@@ -875,9 +896,11 @@ class Plane extends PhysicsState {
             // 使われていないミサイルを探す
 
             let k;
-            for (k = 0; k < Plane.MMMAX; k++)
-                if (this.aam[k].use < 0 && this.aamTarget[k] >= 0)
+            for (k = 0; k < Plane.MMMAX; k++) {
+                if (this.aam[k].use < 0 && this.aamTarget[k] >= 0) {
                     break;
+                }
+            }
 
             if (k !== Plane.MMMAX) {
                 let ap = this.aam[k];

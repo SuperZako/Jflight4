@@ -319,7 +319,7 @@ class Jflight extends Applet3D {
         let cp = new CVector3();
 
         for (let j = 0; j < Plane.BMAX; j++) {
-            let bp = aplane.bullet[j];
+            let bp = aplane.bullets[j];
 
             // useカウンタが0より大きいもののみ表示
             if (bp.use > 0) {

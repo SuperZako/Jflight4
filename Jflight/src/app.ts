@@ -42,8 +42,6 @@ namespace Main {
         scene = new THREE.Scene();
 
         // camera
-        //const SCREEN_WIDTH: number = 600; // window.innerWidth;
-        //const SCREEN_HEIGHT: number = 400; // window.innerHeight;
         const SCREEN_WIDTH = window.innerWidth;
         const SCREEN_HEIGHT = window.innerHeight;
         const VIEW_ANGLE: number = 90;

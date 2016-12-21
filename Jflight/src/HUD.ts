@@ -3,7 +3,15 @@
 class HUD {
     //mouseX: number;
     //mouseY: number;
+
+    private context: CanvasRenderingContext2D;
+
     public constructor(private canvas: HTMLCanvasElement, private plane: Plane) {
+        let context = canvas.getContext("2d");
+
+        if (context) {
+            this.context = context;
+        }
     }
 
     private drawLine(context: CanvasRenderingContext2D, strokeStyle: string, x1: number, y1: number, x2: number, y2: number) {
@@ -40,7 +48,13 @@ class HUD {
         context.restore();
     }
 
-
+    public fillText(context: CanvasRenderingContext2D, text: string, x: number, y: number) {
+        context.save();
+        context.font = "18px 'ＭＳ Ｐゴシック'";
+        context.fillStyle = "white";
+        context.fillText(text, x, y);
+        context.restore();
+    }
     public drawCross(context: CanvasRenderingContext2D, x: number, y: number, length: number) {
         this.drawLine(context, "rgb(255, 255, 255)", x, y - length, x, y + length);
         this.drawLine(context, "rgb(255, 255, 255)", x - length, y, x + length, y);
@@ -86,7 +100,9 @@ class HUD {
                 this.drawLine(context, "rgb(255, 255, 255)", centerX - 150, centerY + i * 20 + Math.tan(x) * centerY, centerX + 150, centerY + i * 20 + Math.tan(x) * centerY);
             }
             context.restore();
-
+            this.fillText(context, "Speed=" + this.plane.velocity.abs(), 50, 50);
         }
+
+
     }
 }
